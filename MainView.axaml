@@ -298,7 +298,7 @@
 				</StackPanel>
 			</Border>
 		</Grid>
-		<Grid x:Name="modalRoot" IsVisible="True" Background="#661A1A1A">
+		<Grid x:Name="modalRoot" IsVisible="False" Background="#661A1A1A">
 			<Border x:Name="modalOutput" Width="400" Height="250" Background="#F3F3F3">
 				<Grid>
 				<Grid.RowDefinitions>
