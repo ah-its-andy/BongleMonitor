@@ -32,6 +32,44 @@ public partial class MainView : UserControl
         btnSvcStart.Click += BtnSvcStart_Click;
         btnSvcStop.Click += BtnSvcStop_Click;
         btnShowLogs.Click += BtnShowLogs_Click;
+        btnShutdown.Click += BtnShutdown_Click;
+        btnReset.Click += BtnReset_Click;
+        btnConfirmOk.Click += BtnConfirmOk_Click;
+        btnConfirmCancel.Click += BtnConfirmCancel_Click;
+    }
+
+    private async void BtnConfirmCancel_Click(object? sender, RoutedEventArgs e)
+    {
+        await InitScript("echo 'OK'");
+    }
+
+    private async void BtnConfirmOk_Click(object? sender, RoutedEventArgs e)
+    {
+        await RunScript();
+    }
+
+    private async void BtnReset_Click(object? sender, RoutedEventArgs e)
+    {
+        await InitScript("shutdown -r now");
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            txtConfirm.Text = "請確認重新啓動";
+            modalConfirm.IsVisible = true;
+            modalOutput.IsVisible = false;
+            modalRoot.IsVisible = true;
+        });
+    }
+
+    private async void BtnShutdown_Click(object? sender, RoutedEventArgs e)
+    {
+        await InitScript("shutdown now");
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            txtConfirm.Text = "請確認關機";
+            modalConfirm.IsVisible = true;
+            modalOutput.IsVisible = false;
+            modalRoot.IsVisible = true;
+        });
     }
 
     private async void MainView_Loaded(object? sender, RoutedEventArgs e)
@@ -41,32 +79,38 @@ public partial class MainView : UserControl
 
     private async void BtnShowLogs_Click(object? sender, RoutedEventArgs e)
     {
-        await RunScript("tail -n 1 -f /var/logs/gammu-smsd.log");
+        await InitScript("tail -n 1 -f /var/logs/gammu-smsd.log");
+        await RunScript();
     }
 
     private async void BtnSvcStop_Click(object? sender, RoutedEventArgs e)
     {
-        await RunScript("systemctl stop gammu-smsd");
+        await InitScript("systemctl stop gammu-smsd");
+        await RunScript();
     }
 
     private async void BtnSvcStart_Click(object? sender, RoutedEventArgs e)
     {
-        await RunScript("systemctl start gammu-smsd");
+        await InitScript("systemctl start gammu-smsd");
+        await RunScript();
     }
 
     private async void BtnSvcStatus_Click(object? sender, RoutedEventArgs e)
     {
-        await RunScript("systemctl status gammu-smsd");
+        await InitScript("systemctl status gammu-smsd");
+        await RunScript();
     }
 
     private async void BtnLSDev_Click(object? sender, RoutedEventArgs e)
     {
-        await RunScript("ls /dev/ttyUSB*");
+        await InitScript("ls /dev/ttyUSB*");
+        await RunScript();
     }
 
     private async void BtnLSUSB_Click(object? sender, RoutedEventArgs e)
     {
-        await RunScript("lsusb");
+        await InitScript("lsusb");
+        await RunScript();
     }
 
     private async Task KillCurrentProcess()
@@ -90,18 +134,24 @@ public partial class MainView : UserControl
         });
     }
 
-    public async Task RunScript(string script)
+    public async Task InitScript(string script)
     {
         await KillCurrentProcess();
+        CurrentProcess = Command.StartShell(script);
+    }
+
+    public async Task RunScript()
+    {
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             TextOutput.Text = string.Empty;
+            modalConfirm.IsVisible = false;
+            modalOutput.IsVisible = true;
             modalRoot.IsVisible = true;
         });
         try
         {
-            CurrentProcess = Command.StartShell(script);
-            CurrentProcess.Start();
+            CurrentProcess?.Start();
             while (!CurrentProcess.StandardOutput.EndOfStream)
             {
                 var line = CurrentProcess.StandardOutput.ReadLine();
