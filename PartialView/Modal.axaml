@@ -17,7 +17,7 @@
 						BorderBrush="#E5E5E5"
 						BorderThickness="0,0,0,3"
 						Padding="5">
-					<TextBlock Text="輸出"></TextBlock>
+					<TextBlock Text="TERMINAL OUTPUT"></TextBlock>
 				</Border>
 				<TextBox x:Name="TextOutput"
 					Grid.Row="1"
@@ -32,7 +32,7 @@
 						HorizontalAlignment="Stretch"
 						VerticalContentAlignment="Center"
 						HorizontalContentAlignment="Center"
-						Content="關閉"
+						Content="Close"
 						></Button>
 			</Grid>
 		</Border>
@@ -48,13 +48,13 @@
 						BorderBrush="#E5E5E5"
 						BorderThickness="0,0,0,3"
 						Padding="5">
-					<TextBlock Text="確認操作"></TextBlock>
+					<TextBlock Text="Confirm"></TextBlock>
 				</Border>
 				<TextBlock x:Name="TxtConfirm"
 							Grid.Row="1"
 						   VerticalAlignment="Center"
 						   HorizontalAlignment="Center"
-						   Text="是否確認關機"></TextBlock>
+						   Text=""></TextBlock>
 				<Grid Grid.Row="2"
 							Margin="10"
 							HorizontalAlignment="Stretch">
@@ -64,13 +64,13 @@
 							HorizontalContentAlignment="Center"
 							VerticalContentAlignment="Center"
 							Width="60"
-							Content="確認"></Button>
+							Content="Accept"></Button>
 					<Button x:Name="BtnConfirmCancel"
 						Width="60" HorizontalAlignment="Right"
 							VerticalAlignment="Stretch"
 							HorizontalContentAlignment="Center"
 							VerticalContentAlignment="Center"
-							Content="取消"></Button>
+							Content="Cancel"></Button>
 				</Grid>
 			</Grid>
 		</Border>

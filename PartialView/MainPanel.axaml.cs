@@ -8,6 +8,8 @@ namespace BongleMonitor.PartialView;
 public partial class MainPanel : UserControl
 {
     private readonly MainView _mainView;
+
+    public MainPanel() { }
     public MainPanel(MainView mainView)
     {
         InitializeComponent();

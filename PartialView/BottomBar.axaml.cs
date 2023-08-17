@@ -3,20 +3,48 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
+using System;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace BongleMonitor.PartialView;
 
 public partial class BottomBar : UserControl
 {
-    public BottomBar()
+    private readonly MainSingleView _mainSingleView;
+
+    public BottomBar() { }
+    public BottomBar(MainSingleView mainSingleView)
     {
         InitializeComponent();
+        _mainSingleView = mainSingleView;
+        
     }
 
-
+    public async Task SubscribeServiceStatus()
+    {
+        foreach (var svc in _mainSingleView.Services)
+        {
+            var block = new TextBlock
+            {
+                FontSize = 10,
+                Foreground = Brush.Parse("#717171"),
+            };
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                bottomBar.Children.Add(block);
+            });
+            svc.Value.ProcessStatusChanged += async (sender, e) =>
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    block.Text = $"{svc.Key}: {e.Status}";
+                });
+            };
+        }
+    }
     public async Task FindIPAddresses()
     {
         await Dispatcher.UIThread.InvokeAsync(() =>

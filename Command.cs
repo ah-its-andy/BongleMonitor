@@ -74,65 +74,9 @@ namespace BongleMonitor
             process.WaitForExit();
         }
 
-        public static IEnumerable<UsbInfo> LsUSB()
-        {
-            using(var stream = new MemoryStream())
-            {
-                using(var writer = new StreamWriter(stream))
-                {
-                    Run("lsusb", writer);
-                }
-                using(var reader = new StreamReader(stream))
-                {
-                    while(!reader.EndOfStream)
-                    {
-                        var line = reader.ReadLine();
-                        if(string.IsNullOrEmpty(line))
-                        {
-                            continue;
-                        }
-                        var parts = line.Split(' ');
-                        string bus = "";
-                        string device = "";
-                        string id = "";
-                        string name = "";
-                        if(parts.Length >= 2)
-                        {
-                            bus = parts[1];
-                        }
-                        if (parts.Length >= 4)
-                        {
-                            device = parts[3];
-                        }
-                        if(parts.Length >= 6)
-                        {
-                            id = parts[5];
-                        }
-                        if(parts.Length >= 7)
-                        {
-                            name = parts[6];
-                        }
-                        yield return new UsbInfo
-                        {
-                            Bus = bus,
-                            Device = device,
-                            ID = id,
-                            Name = name,
-                        };
-                    }
-                }
-            }
-        }
+
     }
 
-    // Bus 002 Device 001: ID 1d6b:0003 XXXXX XXXXX XXXXX
-    public class UsbInfo
-    {
-        public string Bus { get; set; }
-        public string Device { get; set; }
-        public string ID { get; set; }
-        public string Name { get; set; }
-    }
 }
 
 

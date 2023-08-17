@@ -14,6 +14,9 @@ public partial class Modal : UserControl
 {
     private Process? CurrentProcess;
     private readonly Panel _parentElement;
+
+    public Modal() { }
+
     public Modal(Panel parentElement)
     {
         InitializeComponent();
@@ -134,7 +137,10 @@ public partial class Modal : UserControl
             while (!CurrentProcess.StandardOutput.EndOfStream)
             {
                 var line = CurrentProcess.StandardOutput.ReadLine();
-                await this.WriteOutput(line);
+                if (!string.IsNullOrEmpty(line))
+                {
+                    await this.WriteOutput(line);
+                }
             }
         }
         catch (Exception ex)

@@ -6,6 +6,6 @@
 			 mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="320"
              x:Class="BongleMonitor.MainSingleView">
 	<Grid x:Name="rootVisual">
-		<TextBlock Text="系統正在啓動中..." VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
+		<TextBlock x:Name="textTip" Text="系統正在啓動中..." VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
 	</Grid>
 </UserControl>

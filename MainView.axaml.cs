@@ -21,9 +21,16 @@ namespace BongleMonitor;
 
 public partial class MainView : UserControl
 {
+    private readonly MainSingleView _mainSingleView;
+
     public MainView()
     {
+
+    }
+    public MainView(MainSingleView mainSingleView)
+    {
         InitializeComponent();
+        _mainSingleView = mainSingleView;
         this.Loaded += MainView_Loaded;
         btnShutdown.Click += BtnShutdown_Click;
         btnReset.Click += BtnReset_Click;
@@ -39,7 +46,7 @@ public partial class MainView : UserControl
         var dialog = new PartialView.Modal(modalRoot);
         dialog.ConfirmClick += async (s, e) => await dialog.RunScript();
         await dialog.InitScript("shutdown -r now");
-        await dialog.SetConfirmMessage("請確認重新啓動");
+        await dialog.SetConfirmMessage("System will reboot");
         await dialog.ShowConfirm();
         await dialog.ShowDialog();
     }
@@ -49,19 +56,20 @@ public partial class MainView : UserControl
         var dialog = new PartialView.Modal(modalRoot);
         await dialog.InitScript("shutdown now");
         dialog.ConfirmClick += async (s, e) => await dialog.RunScript();
-        await dialog.SetConfirmMessage("請確認關機");
+        await dialog.SetConfirmMessage("System will shutdown");
         await dialog.ShowConfirm();
         await dialog.ShowDialog();
     }
 
     public async Task InitBottomBar()
     {
-        var bottomBar = new PartialView.BottomBar();
+        var bottomBar = new PartialView.BottomBar(_mainSingleView);
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             bottomBarRoot.Child = bottomBar;
         });
         await bottomBar.FindIPAddresses();
+        await bottomBar.SubscribeServiceStatus();
     }
 
     public async Task InitMainPanel()
