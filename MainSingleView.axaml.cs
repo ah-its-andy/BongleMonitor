@@ -10,8 +10,23 @@ namespace BongleMonitor;
 
 public partial class MainSingleView : UserControl
 {
+    private static  MainSingleView _instance;
+    public static  MainSingleView Instance
+    {
+        get
+        {
+            if(_instance == null)
+            {
+                _instance = new MainSingleView();
+            }
+            return _instance;
+        }
+    }
+
     public readonly Dictionary<string, ProcessGuardian> Services;
     public readonly Dictionary<string, FileSystemWatcher> FileWatchers;
+
+
     public MainSingleView()
     {
         InitializeComponent();
@@ -28,14 +43,13 @@ public partial class MainSingleView : UserControl
         }
 
         await Task.Delay(TimeSpan.FromSeconds(2));
-        var mainView = new MainView(this);
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             rootVisual.Children.Clear();
-            rootVisual.Children.Add(mainView);
+            rootVisual.Children.Add(MainView.Instance);
         });
-        await mainView.InitBottomBar();
-        await mainView.InitMainPanel();
+        await MainView.Instance.InitBottomBar();
+        await MainView.Instance.InitMainPanel();
 
         await StartServices();
     }

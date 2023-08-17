@@ -21,29 +21,28 @@ namespace BongleMonitor;
 
 public partial class MainView : UserControl
 {
-    private readonly MainSingleView _mainSingleView;
-
+    private static MainView _instance;
+    public static MainView Instance
+    {
+        get
+        {
+            if(_instance == null)
+            {
+                _instance = new MainView();
+            }
+            return _instance;
+        }
+    }
     public MainView()
     {
-
-    }
-    public MainView(MainSingleView mainSingleView)
-    {
         InitializeComponent();
-        _mainSingleView = mainSingleView;
-        this.Loaded += MainView_Loaded;
         btnShutdown.Click += BtnShutdown_Click;
         btnReset.Click += BtnReset_Click;
     }
 
-    private async void MainView_Loaded(object? sender, RoutedEventArgs e)
-    {
-       
-    }
-
     private async void BtnReset_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal(modalRoot);
+        var dialog = new PartialView.Modal();
         dialog.ConfirmClick += async (s, e) => await dialog.RunScript();
         await dialog.InitScript("shutdown -r now");
         await dialog.SetConfirmMessage("System will reboot");
@@ -53,7 +52,7 @@ public partial class MainView : UserControl
 
     private async void BtnShutdown_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal(modalRoot);
+        var dialog = new PartialView.Modal();
         await dialog.InitScript("shutdown now");
         dialog.ConfirmClick += async (s, e) => await dialog.RunScript();
         await dialog.SetConfirmMessage("System will shutdown");
@@ -63,18 +62,19 @@ public partial class MainView : UserControl
 
     public async Task InitBottomBar()
     {
-        var bottomBar = new PartialView.BottomBar(_mainSingleView);
+        var bottomBar = new PartialView.BottomBar();
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             bottomBarRoot.Child = bottomBar;
         });
-        await bottomBar.FindIPAddresses();
+        await bottomBar.StartCalculateTime();
         await bottomBar.SubscribeServiceStatus();
+        await bottomBar.FindIPAddresses();
     }
 
     public async Task InitMainPanel()
     {
-        var mainPanel = new PartialView.MainPanel(this);
+        var mainPanel = new PartialView.MainPanel();
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             mainPanelRoot.Child = mainPanel;

@@ -7,13 +7,9 @@ namespace BongleMonitor.PartialView;
 
 public partial class MainPanel : UserControl
 {
-    private readonly MainView _mainView;
-
-    public MainPanel() { }
-    public MainPanel(MainView mainView)
+    public MainPanel()
     {
         InitializeComponent();
-        _mainView = mainView;
 
         btnLSUSB.Click += BtnLSUSB_Click;
         btnLSDev.Click += BtnLSDev_Click;
@@ -26,7 +22,7 @@ public partial class MainPanel : UserControl
 
     private async void BtnShowLogs_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal(_mainView.modalRoot);
+        var dialog = new PartialView.Modal();
         await dialog.InitScript("tail -n 1 -f /var/logs/gammu-smsd.log");
         await dialog.ShowOutput();
         await dialog.ShowDialog();
@@ -35,7 +31,7 @@ public partial class MainPanel : UserControl
 
     private async void BtnSvcStop_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal(_mainView.modalRoot);
+        var dialog = new PartialView.Modal();
         await dialog.InitScript("systemctl stop gammu-smsd");
         await dialog.ShowOutput();
         await dialog.ShowDialog();
@@ -44,7 +40,7 @@ public partial class MainPanel : UserControl
 
     private async void BtnSvcStart_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal(_mainView.modalRoot);
+        var dialog = new PartialView.Modal();
         await dialog.InitScript("systemctl start gammu-smsd");
         await dialog.ShowOutput();
         await dialog.ShowDialog();
@@ -53,7 +49,7 @@ public partial class MainPanel : UserControl
 
     private async void BtnSvcStatus_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal(_mainView.modalRoot);
+        var dialog = new PartialView.Modal();
         await dialog.InitScript("systemctl status gammu-smsd");
         await dialog.ShowOutput();
         await dialog.ShowDialog();
@@ -62,7 +58,7 @@ public partial class MainPanel : UserControl
 
     private async void BtnLSDev_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal(_mainView.modalRoot);
+        var dialog = new PartialView.Modal();
         await dialog.InitScript("ls /dev/ttyUSB*");
         await dialog.ShowOutput();
         await dialog.ShowDialog();
@@ -71,7 +67,7 @@ public partial class MainPanel : UserControl
 
     private async void BtnLSUSB_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal(_mainView.modalRoot);
+        var dialog = new PartialView.Modal();
         await dialog.InitScript("lsusb");
         await dialog.ShowOutput();
         await dialog.ShowDialog();

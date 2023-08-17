@@ -13,14 +13,9 @@ namespace BongleMonitor.PartialView;
 public partial class Modal : UserControl
 {
     private Process? CurrentProcess;
-    private readonly Panel _parentElement;
-
-    public Modal() { }
-
-    public Modal(Panel parentElement)
+    public Modal()
     {
         InitializeComponent();
-        _parentElement = parentElement;
 
         BtnCloseModal.Click += BtnCloseModal_Click;
         BtnConfirmCancel.Click += BtnConfirmCancel_Click;
@@ -86,12 +81,9 @@ public partial class Modal : UserControl
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            if (_parentElement != null)
-            {
-                _parentElement.Children.Clear();
-                _parentElement.Children.Add(this);
-                _parentElement.IsVisible = true;
-            }
+            MainView.Instance.modalRoot.Children.Clear();
+            MainView.Instance.modalRoot.Children.Add(this);
+            MainView.Instance.modalRoot.IsVisible = true;
         });
     }
 
@@ -99,10 +91,7 @@ public partial class Modal : UserControl
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            if (_parentElement != null)
-            {
-                _parentElement.IsVisible = false;
-            }
+            MainView.Instance.modalRoot.IsVisible = false;
         });
     }
 

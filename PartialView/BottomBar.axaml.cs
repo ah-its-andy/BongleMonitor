@@ -8,24 +8,38 @@ using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace BongleMonitor.PartialView;
 
 public partial class BottomBar : UserControl
 {
-    private readonly MainSingleView _mainSingleView;
-
-    public BottomBar() { }
-    public BottomBar(MainSingleView mainSingleView)
-    {
+    public BottomBar() {
         InitializeComponent();
-        _mainSingleView = mainSingleView;
-        
+    }
+
+    public async Task StartCalculateTime()
+    {
+        var block = new TextBlock
+        {
+            FontSize = 10,
+            Foreground = Brush.Parse("#717171"),
+        };
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            bottomBar.Children.Add(block);
+        });
+        var now = DateTime.Now;
+        var timer = new Timer(1000);
+        timer.Elapsed += async (s, e) =>
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => block.Text = $"Running: {(DateTime.Now - now).ToString()}");
+        };
     }
 
     public async Task SubscribeServiceStatus()
     {
-        foreach (var svc in _mainSingleView.Services)
+        foreach (var svc in MainSingleView.Instance.Services)
         {
             var block = new TextBlock
             {
