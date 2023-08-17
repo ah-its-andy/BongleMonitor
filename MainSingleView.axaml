@@ -5,5 +5,7 @@
              xmlns:bongle="clr-namespace:BongleMonitor"
 			 mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="320"
              x:Class="BongleMonitor.MainSingleView">
-	<bongle:MainView/>
+	<Grid x:Name="rootVisual">
+		<TextBlock Text="系統正在啓動中..." VerticalAlignment="Center" HorizontalAlignment="Center"></TextBlock>
+	</Grid>
 </UserControl>
