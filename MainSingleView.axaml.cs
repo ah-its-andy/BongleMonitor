@@ -33,6 +33,7 @@ public partial class MainSingleView : UserControl
         InitializeComponent();
         Loaded += async (sender, e) =>
         {
+            await MainView.Instance.WriteLogAsync($"[UIThread] Rendering MainView");
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 if (MainView.Instance.Parent == null)
@@ -41,9 +42,10 @@ public partial class MainSingleView : UserControl
                     rootVisual.Children.Add(MainView.Instance);
                 }
             });
+            MainView.Instance.RenderLogs();
             await MainView.Instance.InitBottomBar();
-            await MainView.Instance.InitMainPanel();
             await MainView.Instance.InitGammuSmsD();
+            await MainView.Instance.InitMainPanel();
             await MainView.Instance.InitLogView();
         };
     }

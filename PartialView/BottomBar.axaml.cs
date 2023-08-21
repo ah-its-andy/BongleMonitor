@@ -18,31 +18,46 @@ public partial class BottomBar : UserControl
         InitializeComponent();
     }
 
+    private TextBlock TextCalculateTime;
+
     public async Task StartCalculateTime()
     {
-        var block = new TextBlock
+        TextCalculateTime = new TextBlock
         {
             FontSize = 10,
             Foreground = Brush.Parse("#717171"),
+            Text = "Running"
         };
+        await MainView.Instance.WriteLogAsync($"[UIThread] Rendering CalculateTime");
+
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            bottomBar.Children.Add(block);
+            bottomBar.Children.Add(TextCalculateTime);
         });
         var now = DateTime.Now;
         var timer = new Timer(1000);
         timer.Elapsed += async (s, e) =>
         {
-            await Dispatcher.UIThread.InvokeAsync(() => block.Text = $"Running: {(DateTime.Now - now).ToString()}");
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var elapse = (DateTime.Now - now);
+                var text = "";
+                if (elapse.Days > 1)
+                {
+                    text = $"{elapse.Days} DAYS {elapse.Hours}:{elapse.Minutes}:{elapse.Seconds}";
+                } else
+                {
+                    text = $"{elapse.Days} DAY {elapse.Hours}:{elapse.Minutes}:{elapse.Seconds}";
+                }
+                TextCalculateTime.Text = $"Running: {text}";
+            });
         };
+        timer.Start();
     }
 
     public async Task FindIPAddresses()
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            bottomBar.Children.Clear();
-        });
+        await MainView.Instance.WriteLogAsync($"[UIThread] Rendering IP Addresses");
 
         var index = 0;
         foreach (var ipAddr in GetLocalIPAddresses())

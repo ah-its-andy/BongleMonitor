@@ -38,21 +38,21 @@ public partial class MainView : UserControl
         }
     }
 
-    private readonly Mutex mutex;
+    private readonly ConcurrentQueue<string> logs;
     private readonly List<Dictionary<string, string>> bongles;
     private readonly ConcurrentDictionary<string, long> lastPositions;
 
     public MainView()
     {
         InitializeComponent();
-        mutex = new Mutex();
+        logs = new ConcurrentQueue<string>();
         bongles = new List<Dictionary<string, string>>();
         lastPositions = new ConcurrentDictionary<string, long>();
     }
 
-    private async Task<IEnumerable<string>> FindTTYUsbDevices()
+    private  Task<IEnumerable<string>> FindTTYUsbDevices()
     {
-        return await Task.Run<IEnumerable<string>>(() =>
+        return Task.Run<IEnumerable<string>>(async () =>
         {
             try
             {
@@ -64,8 +64,9 @@ public partial class MainView : UserControl
                 }
                 return files;
             }
-            catch (System.IO.DirectoryNotFoundException)
+            catch (Exception ex)
             {
+                await WriteLogAsync($"[ERROR] {ex.Message}");
                 return new List<string>();
             }
         });
@@ -88,15 +89,15 @@ public partial class MainView : UserControl
 
         var process = Command.StartShell($"gammu -c {fileName} identify");
         process.Start();
-        var result = Config.UnmarshalGammuIdentify(process.StandardOutput);
+        var result = await Config.UnmarshalGammuIdentifyAsync(process.StandardOutput);
         process.WaitForExit();
         return result;
     }
 
 
-    private async Task<IEnumerable<string>> FindQuectelDevices()
+    private Task<IEnumerable<string>> FindQuectelDevices()
     {
-        return await Task.Run<IEnumerable<string>>(() =>
+        return Task.Run<IEnumerable<string>>(async () =>
         {
             try
             {
@@ -107,7 +108,9 @@ public partial class MainView : UserControl
                 while (!process.StandardOutput.EndOfStream)
                 {
                     var line = process.StandardOutput.ReadLine();
-                    if (!string.IsNullOrEmpty(line) && line.Contains("Quectel Wireless Solutions"))
+                    if (string.IsNullOrEmpty(line)) continue;
+                    await WriteLogAsync($"[lsusb] {line}");
+                    if (line.Contains("Quectel Wireless Solutions"))
                     {
                         result.Add(line);
                     }
@@ -115,8 +118,9 @@ public partial class MainView : UserControl
                 process.WaitForExit();
                 return result;
             }
-            catch
+            catch(Exception ex) 
             {
+                await WriteLogAsync($"[ERROR] {ex.Message}");
                 return Enumerable.Empty<string>();
             }
         });
@@ -129,18 +133,15 @@ public partial class MainView : UserControl
         var usbDevs = await FindTTYUsbDevices();
         if (usbDevs.Count() == 0)
         {
-            await Dispatcher.UIThread.InvokeAsync(async () =>
+            await WriteLogAsync("[Init] USB device not found. Please check the device connection.");
+            if (devices.Count() > 0)
             {
-                await WriteLogAsync("[Launching] USB device not found. Please check the device connection.");
-                if (devices.Count() > 0)
+                await WriteLogAsync("[Init] Following devices was connected:");
+                foreach (var device in devices)
                 {
-                    await WriteLogAsync("[Launching] Following devices was connected:");
-                    foreach (var device in devices)
-                    {
-                        await WriteLogAsync($"[Launching] {device}");
-                    }
+                    await WriteLogAsync($"[Init] {device}");
                 }
-            });
+            }
             return false;
         }
 
@@ -169,58 +170,63 @@ public partial class MainView : UserControl
 
         if (bongles.Count == 0)
         {
-            await Dispatcher.UIThread.InvokeAsync(async () =>
+            await WriteLogAsync("[Init] Quectel EC200A not found. Please check the device connection.");
+            if (devices.Count() > 0)
             {
-                await WriteLogAsync("[Launching] Quectel EC200A not found. Please check the device connection.");
-                if (devices.Count() > 0)
+                await WriteLogAsync("[Init] Following devices was connected:");
+                foreach (var device in devices)
                 {
-                    await WriteLogAsync("[Launching] Following devices was connected:");
-                    foreach (var device in devices)
-                    {
-                        await WriteLogAsync($"[Launching] {device}");
-                    }
+                    await WriteLogAsync($"[Init] {device}");
                 }
-            });
+            }
             return false;
         }
 
         foreach (var bongle in bongles)
         {
-            var tmpDir = $"/tmp/gammu-smsd/";
+            var tmpDir = $"/etc/gammu-smsd/";
             if (!Directory.Exists(tmpDir))
             {
+                await WriteLogAsync($"[Init] Create temp directory: {tmpDir}");
                 Directory.CreateDirectory(tmpDir);
             }
             var fileName = System.IO.Path.Join(tmpDir, System.IO.Path.GetFileNameWithoutExtension(bongle["Device"]));
             if (File.Exists(fileName))
             {
+                await WriteLogAsync($"[Init] Remove old config file: {fileName}");
                 File.Delete(fileName);
             }
             var smsdConfig = Config.GetGammuSmsDConfig(bongle["ID"], bongle["Device"]);
             if (!Directory.Exists($"/share/gammu-smsd/{bongle["ID"]}/inbox"))
             {
+                await WriteLogAsync($"[Init] Create inbox directory: {bongle["ID"]}");
                 Directory.CreateDirectory($"/share/gammu-smsd/{bongle["ID"]}/inbox");
             }
             if (!Directory.Exists($"/share/gammu-smsd/{bongle["ID"]}/outbox"))
             {
+                await WriteLogAsync($"[Init] Create outbox directory: {bongle["ID"]}");
                 Directory.CreateDirectory($"/share/gammu-smsd/{bongle["ID"]}/outbox");
             }
             if (!Directory.Exists($"/share/gammu-smsd/{bongle["ID"]}/sent"))
             {
+                await WriteLogAsync($"[Init] Create sent directory: {bongle["ID"]}");
                 Directory.CreateDirectory($"/share/gammu-smsd/{bongle["ID"]}/sent");
             }
             if (!Directory.Exists($"/share/gammu-smsd/{bongle["ID"]}/error"))
             {
+                await WriteLogAsync($"[Init] Create error directory: {bongle["ID"]}");
                 Directory.CreateDirectory($"/share/gammu-smsd/{bongle["ID"]}/error");
             }
-
+            await WriteLogAsync($"[Init] Write gammu-smsd config file: {fileName}");
             await File.WriteAllTextAsync(fileName, smsdConfig);
             var dev = System.IO.Path.GetFileNameWithoutExtension(bongle["Device"]);
+            await WriteLogAsync($"[Init] Starting gammu-smsd@{dev}");
             var startService = Command.StartShell($"systemctl start gammu-smsd@{dev}");
             startService.Start();
             BindLogStream(dev, startService.StandardOutput);
             BindLogStream($"{dev} ERROR", startService.StandardError);
             await startService.WaitForExitAsync();
+            await WriteLogAsync($"[Init] Watch gammu-smsd@{dev}");
             var journal = Command.StartShell($"journalctl -u gammu-smsd@{dev} -f");
             journal.Start();
             BindLogStream(dev, startService.StandardOutput);
@@ -233,11 +239,12 @@ public partial class MainView : UserControl
 
     public async Task InitLogView()
     {
-        BindLogDir("SMSd", "/tmp/gammu-smsd/");
+        await BindLogDirAsync("SMSd", "/tmp/gammu-smsd/");
     }
     public async Task InitBottomBar()
     {
         var bottomBar = new PartialView.BottomBar();
+        await WriteLogAsync($"[UIThread] Rendering BottomBar");
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             bottomBarRoot.Child = bottomBar;
@@ -249,14 +256,17 @@ public partial class MainView : UserControl
     public async Task InitMainPanel()
     {
         var mainPanel = new PartialView.MainPanel();
+        await WriteLogAsync($"[UIThread] Rendering MainPanel");
+
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             mainPanelContainer.Content = mainPanel;
         });
     }
 
-    public void BindLogStream(string prefix, StreamReader reader)
+    public async void BindLogStream(string prefix, StreamReader reader)
     {
+        await WriteLogAsync($"[LOG] Bind {prefix} stream to LogViewer");
         Task.Run(async () =>
         {
             while (!reader.EndOfStream)
@@ -268,7 +278,7 @@ public partial class MainView : UserControl
         });
     }
 
-    public async void BindLogDir(string prefix, string dirPath)
+    public async Task BindLogDirAsync(string prefix, string dirPath)
     {
         try
         {
@@ -277,7 +287,7 @@ public partial class MainView : UserControl
             {
                 foreach (var file in files)
                 {
-                    BindLogFile(prefix, file);
+                    await BindLogFileAsync(prefix, file);
                 }
             }
         } catch (Exception ex)
@@ -286,7 +296,7 @@ public partial class MainView : UserControl
         }
     }
 
-    public void BindLogFile(string prefix, string fileName)
+    public async Task BindLogFileAsync(string prefix, string fileName)
     {
         FileSystemWatcher watcher = new FileSystemWatcher(System.IO.Path.GetDirectoryName(fileName), System.IO.Path.GetFileName(fileName));
 
@@ -341,42 +351,53 @@ public partial class MainView : UserControl
 
         // 启动监视
         watcher.EnableRaisingEvents = true;
+        await WriteLogAsync($"[LOG] Bind {prefix} file: {fileName}");
     }
 
-    public async Task WriteLogAsync(string s)
+    public void RenderLogs()
     {
-        mutex.WaitOne();
-        try
+        Task.Run(async () =>
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            while (true)
             {
-                if (logViewer.Items.Count >= 100)
+                if (logs.TryDequeue(out string s))
                 {
-                    logViewer.Items.Remove(logViewer.Items.GetAt(0));
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        if (logViewer.Items.Count >= 100)
+                        {
+                            logViewer.Items.Remove(logViewer.Items.GetAt(0));
+                        }
+                        var textBlock = new TextBlock
+                        {
+                            Text = s,
+                            FontSize = 10,
+                            Foreground = Brush.Parse("#717171"),
+                            TextWrapping = TextWrapping.Wrap,
+                            Padding = new Thickness(0)
+                        };
+                        var item = new ListBoxItem
+                        {
+                            Content = textBlock,
+                            Padding = new Thickness(0),
+                            Margin = new Thickness(0)
+                        };
+                        if (s.Contains("ERROR"))
+                        {
+                            textBlock.Foreground = Brush.Parse("#f25022");
+                        }
+                        logViewer.Items.Add(item);
+                        logViewerContainer.ScrollToEnd();
+                    });
                 }
-                var textBlock = new TextBlock
-                {
-                    Text = s,
-                    FontSize = 10,
-                    Foreground = Brush.Parse("#717171"),
-                    TextWrapping = TextWrapping.Wrap,
-                    Padding = new Thickness(0)
-                };
-                var item = new ListBoxItem
-                {
-                    Content = textBlock,
-                    Padding = new Thickness(0),
-                    Margin = new Thickness(0)
-                };
-                if(s.Contains("ERROR"))
-                {
-                    textBlock.Foreground = Brush.Parse("#f25022");
-                }
-                logViewer.Items.Add(item);
-                logViewerContainer.ScrollToEnd();
-            });
-        }
-        finally { mutex.ReleaseMutex(); }
+            }
+        });
+    }
+
+    public Task WriteLogAsync(string s)
+    {
+        logs.Enqueue(s);
+        return Task.FromResult(0);
     }
 
     public async Task<string> ShowBongleList()
@@ -396,17 +417,20 @@ public partial class MainView : UserControl
                     TextWrapping = TextWrapping.Wrap,
                 }
             };
+            await WriteLogAsync($"[UIThread] Add device to SelectDeviceDialog");
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 dialog.bongleList.Items.Add(item);
             });
         }
+        await WriteLogAsync($"[UIThread] Show SelectDeviceDialog");
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             modalRoot.Children.Clear();
             modalRoot.Children.Add(dialog);
             modalRoot.IsVisible = true;
         });
-        return dialog.Result;
+
+        return await dialog.WaitCloseAsync();
     }
 }

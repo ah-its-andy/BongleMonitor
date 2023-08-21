@@ -18,7 +18,9 @@
 				<ScrollViewer x:Name="mainPanelContainer"
 							  HorizontalScrollBarVisibility="Visible"
 					VerticalScrollBarVisibility="Hidden">
-					
+					<ProgressBar 
+						Width="100"
+						IsIndeterminate="True"></ProgressBar>
 				</ScrollViewer>
 			</Border>
 			<Border Grid.Row="1" 
@@ -27,11 +29,13 @@
 					Background="#EFF4F9">
 				<ScrollViewer x:Name="logViewerContainer" Background="#EFF4F9">
 					<ListBox x:Name="logViewer" Background="#EFF4F9"></ListBox>
-				</ScrollViewer>				
+				</ScrollViewer>
 			</Border>
 			<Border x:Name="bottomBarRoot" Grid.Row="2" 
 					Padding="5,0">
-				
+				<ProgressBar
+						Width="100"
+						IsIndeterminate="True"></ProgressBar>
 			</Border>
 		</Grid>
 		<Grid x:Name="modalRoot" IsVisible="False" Background="#661A1A1A">

@@ -19,6 +19,18 @@ public partial class MainPanel : UserControl
         btnSvcStatus.Click += BtnSvcStatus_Click;
         btnSvcStart.Click += BtnSvcStart_Click;
         btnSvcStop.Click += BtnSvcStop_Click;
+        btnReset.Click += BtnReset_Click;
+        btnShutdown.Click += BtnShutdown_Click;
+    }
+
+    private async void BtnShutdown_Click(object? sender, RoutedEventArgs e)
+    {
+        await StartAsync("poweroff", "shutdown now");
+    }
+
+    private async void BtnReset_Click(object? sender, RoutedEventArgs e)
+    {
+        await StartAsync("reboot", "reboot");
     }
 
     private async void BtnSvcStop_Click(object? sender, RoutedEventArgs e)

@@ -77,7 +77,7 @@ namespace BongleMonitor
             return builder.ToString();
         }
 
-        public static Dictionary<string, string> UnmarshalGammuIdentify(StreamReader reader)
+        public static async Task<Dictionary<string, string>> UnmarshalGammuIdentifyAsync(StreamReader reader)
         {
             var identify = new Dictionary<string, string>();
             while(!reader.EndOfStream)
@@ -87,6 +87,7 @@ namespace BongleMonitor
                 {
                     continue;
                 }
+                await MainView.Instance.WriteLogAsync($"[GAMMU-IDENTIFY] {line}");
                 var index = line.IndexOf(':');
                 if(index == -1)
                 {
