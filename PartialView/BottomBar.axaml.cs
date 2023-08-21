@@ -37,29 +37,6 @@ public partial class BottomBar : UserControl
         };
     }
 
-    public async Task SubscribeServiceStatus()
-    {
-        foreach (var svc in MainSingleView.Instance.Services)
-        {
-            var label = new Label
-            {
-                FontSize = 10,
-                Foreground = Brush.Parse("#717171"),
-                Content = "SATUS",
-            };
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                bottomBar.Children.Add(label);
-            });
-            svc.Value.ProcessStatusChanged += async (sender, e) =>
-            {
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    label.Content = $"{svc.Key}: {e.Status}";
-                });
-            };
-        }
-    }
     public async Task FindIPAddresses()
     {
         await Dispatcher.UIThread.InvokeAsync(() =>

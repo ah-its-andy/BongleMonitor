@@ -2,6 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace BongleMonitor.PartialView;
 
@@ -16,57 +19,64 @@ public partial class MainPanel : UserControl
         btnSvcStatus.Click += BtnSvcStatus_Click;
         btnSvcStart.Click += BtnSvcStart_Click;
         btnSvcStop.Click += BtnSvcStop_Click;
-        btnShowLogs.Click += BtnShowLogs_Click;
-    }
-
-
-    private async void BtnShowLogs_Click(object? sender, RoutedEventArgs e)
-    {
-        var dialog = new PartialView.Modal();
-        await dialog.InitScript("tail -n 1 -f /var/logs/gammu-smsd.log");
-        await dialog.ShowOutput();
-        await dialog.RunScript();
     }
 
     private async void BtnSvcStop_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal();
-        await dialog.InitScript("systemctl stop gammu-smsd");
-        await dialog.ShowOutput();
-        await dialog.RunScript();
+        var selectedDev = await MainView.Instance.ShowBongleList();
+        if(string.IsNullOrEmpty(selectedDev))
+        {
+            await MainView.Instance.WriteLogAsync("[systemctl] No device selected.");
+            return;
+        }
+        await StartAsync("systemctl", $"systemctl stop gammu-smsd@{Path.GetFileNameWithoutExtension(selectedDev)}");
     }
 
     private async void BtnSvcStart_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal();
-        await dialog.InitScript("systemctl start gammu-smsd");
-        await dialog.ShowOutput();
-        await dialog.RunScript();
+        var selectedDev = await MainView.Instance.ShowBongleList();
+        if (string.IsNullOrEmpty(selectedDev))
+        {
+            await MainView.Instance.WriteLogAsync("[systemctl] No device selected.");
+            return;
+        }
+        await StartAsync("systemctl", $"systemctl start gammu-smsd@{Path.GetFileNameWithoutExtension(selectedDev)}");
     }
 
     private async void BtnSvcStatus_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal();
-        await dialog.InitScript("systemctl status gammu-smsd");
-        await dialog.ShowOutput();
-        await dialog.RunScript();
+        var selectedDev = await MainView.Instance.ShowBongleList();
+        if (string.IsNullOrEmpty(selectedDev))
+        {
+            await MainView.Instance.WriteLogAsync("[systemctl] No device selected.");
+            return;
+        }
+        await StartAsync("systemctl", $"systemctl status gammu-smsd@{Path.GetFileNameWithoutExtension(selectedDev)}");
+    }
+
+    public async Task StartAsync(string prefix, string commands)
+    {
+        try
+        {
+            var process = Command.StartShell(commands);
+            process.Start();
+            MainView.Instance.BindLogStream(prefix, process.StandardOutput);
+            MainView.Instance.BindLogStream($"{prefix} ERROR", process.StandardError);
+            await process.WaitForExitAsync();
+        }
+        catch(Exception e)
+        {
+            await MainView.Instance.WriteLogAsync($"[ERROR] {e.Message}");
+        }
     }
 
     private async void BtnLSDev_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal();
-        await dialog.InitScript("ls /dev/ttyUSB*");
-        await dialog.ShowOutput();
-        await dialog.RunScript();
+        await StartAsync("LSDev", "ls /dev/ttyUSB*");
     }
 
     private async void BtnLSUSB_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new PartialView.Modal();
-        await dialog.InitScript("lsusb");
-        await dialog.ShowOutput();
-        await dialog.RunScript();
+        await StartAsync("LSDev", "lsusb");
     }
-
-
 }

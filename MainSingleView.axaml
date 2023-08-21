@@ -5,44 +5,18 @@
              xmlns:bongle="clr-namespace:BongleMonitor"
 			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="480"
              x:Class="BongleMonitor.MainSingleView">
-	<Grid>
-		<Grid x:Name="rootVisual">
-			<Grid Grid.Row="0" x:Name="splashRoot">
-				<Grid.RowDefinitions>
-					<RowDefinition></RowDefinition>
-					<RowDefinition Height="200"></RowDefinition>
-				</Grid.RowDefinitions>
-				<TextBlock Grid.Row="0" 
-						   x:Name="textTip" Text="Launching..." 
-						   VerticalAlignment="Bottom" 
-						   HorizontalAlignment="Center"></TextBlock>
-				<Grid Grid.Row="1">
-					<Button x:Name="btnReset" Width="100" Height="100" HorizontalAlignment="Center">
-						<Button.Content>
-							<Image>
-								<Image.Source>
-									<DrawingImage>
-										<DrawingImage.Drawing>
-											<GeometryDrawing
-												Brush="Red"
-												Geometry="F1 M24,24z M0,0z M7.207,2.543A1,1,0,0,1,7.207,3.957L5.414,5.75 13.25,5.75A8,8,0,1,1,5.25,13.75A1,1,0,1,1,7.25,13.75A6,6,0,1,0,13.25,7.75L5.414,7.75 7.207,9.543A1,1,0,0,1,5.793,10.957L2.293,7.457A1,1,0,0,1,2.293,6.043L5.793,2.543A1,1,0,0,1,7.207,2.543z"></GeometryDrawing>
-										</DrawingImage.Drawing>
-									</DrawingImage>
-								</Image.Source>
-							</Image>
-						</Button.Content>
-					</Button>
-				</Grid>
-			</Grid>
-		</Grid>
-		<Grid x:Name="logViewRoot" Height="180" VerticalAlignment="Bottom">
-			<ListBox x:Name="logViewer"></ListBox>
-			<Button x:Name="btnCloseLogView" 
-					VerticalAlignment="Top" 
-					HorizontalAlignment="Right"
-					VerticalContentAlignment="Center"
-					HorizontalContentAlignment="Center"
-					Height="35" Width="35">=</Button>
+	<Grid Background="#EFF4F9">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="30"></RowDefinition>
+			<RowDefinition></RowDefinition>
+		</Grid.RowDefinitions>
+		<Border Grid.Row="0" Padding="5">
+			<TextBlock Text="Bongle Monitor"
+					   VerticalAlignment="Center"
+					   HorizontalAlignment="Left"></TextBlock>
+		</Border>
+		<Grid x:Name="rootVisual" Grid.Row="1">
+			
 		</Grid>
 	</Grid>
 </UserControl>

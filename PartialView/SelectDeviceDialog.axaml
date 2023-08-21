@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="BongleMonitor.PartialView.SelectDeviceDialog">
+	<Border 
+		BorderBrush="#66BABABA" 
+		BorderThickness="2" 
+		CornerRadius="6"
+		Background="#EFF4F9">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="30"></RowDefinition>
+			<RowDefinition></RowDefinition>
+			<RowDefinition Height="50"></RowDefinition>
+		</Grid.RowDefinitions>
+		<Border Grid.Row="0" Padding="5">
+			<TextBlock Text="Select Device" 
+					   VerticalAlignment="Center"
+					   HorizontalAlignment="Left"
+					   ></TextBlock>
+		</Border>
+		<ScrollViewer Grid.Row="1" Background="Transparent">
+			<ListBox x:Name="bongleList" Background="Transparent"></ListBox>
+		</ScrollViewer>
+		<Border Grid.Row="2"
+				>
+			<Grid>
+				<Button x:Name="btnConfirm"
+						HorizontalAlignment="Left"
+						HorizontalContentAlignment="Center"
+						VerticalAlignment="Stretch"
+						VerticalContentAlignment="Center"
+						Padding="10"
+						Width="100"
+						>Accept</Button>
+				<Button x:Name="btnCancel"
+						HorizontalAlignment="Right"
+						HorizontalContentAlignment="Center"
+						VerticalAlignment="Stretch"
+						VerticalContentAlignment="Center"
+						Padding="10"
+						Width="100"
+						>Cancel</Button>
+			</Grid>
+		</Border>
+	</Grid>
+	</Border>
+</UserControl>
