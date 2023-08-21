@@ -3,14 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:bongle="clr-namespace:BongleMonitor"
-			 mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="320"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="480"
              x:Class="BongleMonitor.MainView">
 	<Grid>
 		<Grid>
 			<Grid.RowDefinitions>
-				<RowDefinition Height="50"></RowDefinition>
+				<RowDefinition Height="100"></RowDefinition>
 				<RowDefinition></RowDefinition>
-				<RowDefinition Height="20"></RowDefinition>
+				<RowDefinition Height="80"></RowDefinition>
 			</Grid.RowDefinitions>
 			<Border Grid.Row="0" 
 					Background="#F3F3F3"
@@ -24,7 +24,7 @@
 						<ColumnDefinition Width="50"></ColumnDefinition>
 					</Grid.ColumnDefinitions>
 					<Grid Grid.Column="0">
-						<Button x:Name="btnReset" Width="35" Height="35">
+						<Button x:Name="btnReset" Width="80" Height="80">
 							<Button.Content>
 								<Image>
 									<Image.Source>
@@ -45,8 +45,8 @@
 					</Grid>
 					<Grid Grid.Column="2">
 						<Button x:Name="btnShutdown"
-								Width="35" 
-								Height="35"
+								Width="80" 
+								Height="80"
 								HorizontalAlignment="Right">
 							<Button.Content>
 								<Image>

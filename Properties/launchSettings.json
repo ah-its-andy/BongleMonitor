@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "BongleMonitor": {
+      "commandName": "Project",
+      "remoteDebugEnabled": false,
+      "remoteDebugMachine": "",
+      "authenticationMode": "None"
+    }
+  }
+}

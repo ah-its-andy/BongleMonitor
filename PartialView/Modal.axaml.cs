@@ -95,14 +95,14 @@ public partial class Modal : UserControl
         });
     }
 
-    public async Task WriteOutput(string v)
-    {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            TextOutput.Text += v;
-            TextOutput.Text += "\r\n";
-        });
-    }
+    //public async Task WriteOutput(string v)
+    //{
+    //    await Dispatcher.UIThread.InvokeAsync(() =>
+    //    {
+    //        TextOutput.Text += v;
+    //        TextOutput.Text += "\r\n";
+    //    });
+    //}
 
     public async Task SetConfirmMessage(string v)
     {
@@ -122,19 +122,35 @@ public partial class Modal : UserControl
     {
         try
         {
+            await MainSingleView.Instance.ShowLogView();
             CurrentProcess?.Start();
-            while (!CurrentProcess.StandardOutput.EndOfStream)
+            Task.Factory.StartNew(async () =>
             {
-                var line = CurrentProcess.StandardOutput.ReadLine();
-                if (!string.IsNullOrEmpty(line))
+                while (!CurrentProcess.StandardOutput.EndOfStream)
                 {
-                    await this.WriteOutput(line);
+                    var line = CurrentProcess.StandardOutput.ReadLine();
+                    if (!string.IsNullOrEmpty(line))
+                    {
+                        await MainSingleView.Instance.WriteLog(line);
+                    }
                 }
-            }
+            });
+            Task.Factory.StartNew(async () =>
+            {
+                while (!CurrentProcess.StandardError.EndOfStream)
+                {
+                    var line = CurrentProcess.StandardError.ReadLine();
+                    if (!string.IsNullOrEmpty(line))
+                    {
+                        await MainSingleView.Instance.WriteLog($"ERROR: {line}");
+                    }
+                }
+            });
+
         }
         catch (Exception ex)
         {
-            await this.WriteOutput(ex.Message);
+            await MainSingleView.Instance.WriteLog($"ERROR: {ex.Message}");
         }
     }
 

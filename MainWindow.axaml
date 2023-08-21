@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:bongle="clr-namespace:BongleMonitor"
         Width="480" Height="320"
-		mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="320"
+		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="480"
         x:Class="BongleMonitor.MainWindow"
         Title="BongleMonitor">
 	<Grid></Grid>

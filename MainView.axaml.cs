@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -79,5 +80,17 @@ public partial class MainView : UserControl
         {
             mainPanelRoot.Child = mainPanel;
         });
+    }
+
+    public async Task InitLogView()
+    {
+
+        var logView = new PartialView.LogView();
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            mainPanelRoot.Child = logView;
+        });
+        logView.StartAsync();
     }
 }

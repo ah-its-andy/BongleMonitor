@@ -18,7 +18,7 @@ namespace BongleMonitor
             // 創建一個新的ProcessStartInfo對象
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.FileName = "/bin/sh"; // 指定要運行的shell
-            startInfo.Arguments = $"-c '{script}'"; // 指定要執行的命令
+            startInfo.Arguments = $"-c \"{script}\""; // 指定要執行的命令
             startInfo.RedirectStandardOutput = true; // 將輸出重定向到程序
             startInfo.UseShellExecute = false; // 不使用shell啟動程序
             startInfo.CreateNoWindow = true; // 不創建新窗口

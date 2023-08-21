@@ -13,14 +13,22 @@ class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        var builder = BuildAvaloniaApp();
-        if (args.Contains("--drm"))
+        try
         {
-            SilenceConsole();
-            return builder.StartLinuxDrm(args,card:null,scaling:1,inputBackend: null);
-        }
+            var builder = BuildAvaloniaApp();
+            if (args.Contains("--drm"))
+            {
+                SilenceConsole();
+                return builder.StartLinuxDrm(args, card: null, scaling: 1, inputBackend: null);
+            }
 
-        return builder.StartWithClassicDesktopLifetime(args);
+            return builder.StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception ex)
+        {
+            MainSingleView.Instance.WriteLog($"ERROR: {ex.Message}");
+            return -1;
+        }
     }
 
     private static void SilenceConsole()

@@ -25,7 +25,6 @@ public partial class MainPanel : UserControl
         var dialog = new PartialView.Modal();
         await dialog.InitScript("tail -n 1 -f /var/logs/gammu-smsd.log");
         await dialog.ShowOutput();
-        await dialog.ShowDialog();
         await dialog.RunScript();
     }
 
@@ -34,7 +33,6 @@ public partial class MainPanel : UserControl
         var dialog = new PartialView.Modal();
         await dialog.InitScript("systemctl stop gammu-smsd");
         await dialog.ShowOutput();
-        await dialog.ShowDialog();
         await dialog.RunScript();
     }
 
@@ -43,7 +41,6 @@ public partial class MainPanel : UserControl
         var dialog = new PartialView.Modal();
         await dialog.InitScript("systemctl start gammu-smsd");
         await dialog.ShowOutput();
-        await dialog.ShowDialog();
         await dialog.RunScript();
     }
 
@@ -52,7 +49,6 @@ public partial class MainPanel : UserControl
         var dialog = new PartialView.Modal();
         await dialog.InitScript("systemctl status gammu-smsd");
         await dialog.ShowOutput();
-        await dialog.ShowDialog();
         await dialog.RunScript();
     }
 
@@ -61,7 +57,6 @@ public partial class MainPanel : UserControl
         var dialog = new PartialView.Modal();
         await dialog.InitScript("ls /dev/ttyUSB*");
         await dialog.ShowOutput();
-        await dialog.ShowDialog();
         await dialog.RunScript();
     }
 
@@ -70,7 +65,6 @@ public partial class MainPanel : UserControl
         var dialog = new PartialView.Modal();
         await dialog.InitScript("lsusb");
         await dialog.ShowOutput();
-        await dialog.ShowDialog();
         await dialog.RunScript();
     }
 

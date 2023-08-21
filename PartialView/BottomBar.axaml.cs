@@ -41,20 +41,21 @@ public partial class BottomBar : UserControl
     {
         foreach (var svc in MainSingleView.Instance.Services)
         {
-            var block = new TextBlock
+            var label = new Label
             {
                 FontSize = 10,
                 Foreground = Brush.Parse("#717171"),
+                Content = "SATUS",
             };
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                bottomBar.Children.Add(block);
+                bottomBar.Children.Add(label);
             });
             svc.Value.ProcessStatusChanged += async (sender, e) =>
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    block.Text = $"{svc.Key}: {e.Status}";
+                    label.Content = $"{svc.Key}: {e.Status}";
                 });
             };
         }

@@ -60,6 +60,24 @@ namespace BongleMonitor
             process.EnableRaisingEvents = true;
             process.Exited += ProcessExited;
             process.Start();
+            Task.Run(async () =>
+            {
+                while (!process.StandardOutput.EndOfStream)
+                {
+                    var line = process.StandardOutput.ReadLine();
+                    if (string.IsNullOrEmpty(line)) continue;
+                    await MainSingleView.Instance.WriteLog(line);
+                }
+            });
+            Task.Run(async () =>
+            {
+                while (!process.StandardError.EndOfStream)
+                {
+                    var line = process.StandardError.ReadLine();
+                     if (string.IsNullOrEmpty(line)) continue;
+                    await MainSingleView.Instance.WriteLog($"ERROR: {line}");
+                }
+            });
 
             status = ProcessStatus.Running;
             OnProcessStatusChanged(status);
