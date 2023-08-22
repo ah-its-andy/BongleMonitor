@@ -57,8 +57,8 @@ public partial class MainView : UserControl
             try
             {
                 // 先查找ttyUSB設備
-                var files = Directory.GetFiles("/dev", "ttyUSB*");
-                if (files.Length == 0)
+                var files = Directory.EnumerateFiles("/dev", "ttyUSB*");
+                if (files.Count() == 0)
                 {
                     return new List<string>();
                 }
@@ -145,27 +145,33 @@ public partial class MainView : UserControl
             return false;
         }
 
+        await WriteLogAsync("[Init] Fetching device info");
+
         foreach (var usbDev in usbDevs)
         {
-            var identifyInfo = await GetIdentify(usbDev);
-            if (identifyInfo.TryGetValue("Manufacturer", out string manufacturer) &&
-                identifyInfo.TryGetValue("Model", out string model) &&
-                identifyInfo.TryGetValue("SIM IMSI", out string imsi) &&
-                !string.IsNullOrEmpty(imsi) &&
-                manufacturer == "Quectel" &&
-                model.Contains("EC200A"))
+            await WriteLogAsync($"[Init] Fetching {usbDev} identify");
+            await Task.Run(async () =>
             {
-                var phoneNumber = Environment.GetEnvironmentVariable($"IMSI_{imsi}");
-                if (!string.IsNullOrEmpty(phoneNumber))
+                var identifyInfo = await GetIdentify(usbDev);
+                if (identifyInfo.TryGetValue("Manufacturer", out string manufacturer) &&
+                    identifyInfo.TryGetValue("Model", out string model) &&
+                    identifyInfo.TryGetValue("SIM IMSI", out string imsi) &&
+                    !string.IsNullOrEmpty(imsi) &&
+                    manufacturer == "Quectel" &&
+                    model.Contains("EC200A"))
                 {
-                    identifyInfo["ID"] = phoneNumber;
+                    var phoneNumber = Environment.GetEnvironmentVariable($"IMSI_{imsi}");
+                    if (!string.IsNullOrEmpty(phoneNumber))
+                    {
+                        identifyInfo["ID"] = phoneNumber;
+                    }
+                    else
+                    {
+                        identifyInfo["ID"] = imsi;
+                    }
+                    bongles.Add(identifyInfo);
                 }
-                else
-                {
-                    identifyInfo["ID"] = imsi;
-                }
-                bongles.Add(identifyInfo);
-            }
+            });
         }
 
         if (bongles.Count == 0)
@@ -224,13 +230,13 @@ public partial class MainView : UserControl
             var startService = Command.StartShell($"systemctl start gammu-smsd@{dev}");
             startService.Start();
             BindLogStream(dev, startService.StandardOutput);
-            BindLogStream($"{dev} ERROR", startService.StandardError);
+            //BindLogStream($"{dev} ERROR", startService.StandardError);
             await startService.WaitForExitAsync();
             await WriteLogAsync($"[Init] Watch gammu-smsd@{dev}");
             var journal = Command.StartShell($"journalctl -u gammu-smsd@{dev} -f");
             journal.Start();
             BindLogStream(dev, startService.StandardOutput);
-            BindLogStream($"{dev} ERROR", startService.StandardError);
+            //BindLogStream($"{dev} ERROR", startService.StandardError);
         }
 
 
@@ -239,7 +245,7 @@ public partial class MainView : UserControl
 
     public async Task InitLogView()
     {
-        await BindLogDirAsync("SMSd", "/tmp/gammu-smsd/");
+        await BindLogDirAsync("SMSd", "/var/log/gammu-smsd");
     }
     public async Task InitBottomBar()
     {
@@ -269,19 +275,34 @@ public partial class MainView : UserControl
         await WriteLogAsync($"[LOG] Bind {prefix} stream to LogViewer");
         Task.Run(async () =>
         {
-            while (!reader.EndOfStream)
+            try
             {
-                var line = reader.ReadLine();
-                if (string.IsNullOrEmpty(line)) continue;
-                await WriteLogAsync($"[{prefix}] {line} {Environment.NewLine}");
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    if (string.IsNullOrEmpty(line)) continue;
+                    await WriteLogAsync($"[{prefix}] {line} ");
+                }
+            }
+            catch(Exception ex)
+            {
+                await WriteLogAsync($"[{prefix} ERROR] {ex.Message}");
             }
         });
     }
 
     public async Task BindLogDirAsync(string prefix, string dirPath)
     {
+        await WriteLogAsync($"[LOG] Binding log directory: {dirPath}");
+
         try
         {
+            if(!Directory.Exists(dirPath))
+            {
+                await WriteLogAsync($"[LOG] Create Directory {dirPath}");
+
+                Directory.CreateDirectory(dirPath);
+            }
             var files = Directory.GetFiles(dirPath, "*.log");
             if (files?.Any() ?? false)
             {
@@ -298,52 +319,47 @@ public partial class MainView : UserControl
 
     public async Task BindLogFileAsync(string prefix, string fileName)
     {
+        await WriteLogAsync($"[LOG] Bind {fileName} to LogViewer");
         FileSystemWatcher watcher = new FileSystemWatcher(System.IO.Path.GetDirectoryName(fileName), System.IO.Path.GetFileName(fileName));
 
         // 设置要监视的事件类型
         watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size;
 
+        long lastPosition = 0;
+        var lastLines = File.ReadLines(fileName).Reverse().Take(5).Reverse();
+        foreach (var line in lastLines)
+        {
+            if (string.IsNullOrEmpty(line)) continue;
+            await WriteLogAsync($"[{prefix}] {line} {Environment.NewLine}");
+        }
+        using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        {
+            if (fileStream.Length > 0)
+            {
+                lastPosition = fileStream.Length - 1;
+            }
+        }
         // 添加事件处理程序
         watcher.Changed += async (sender, e) =>
         {
-            long lastPosition = 0;
             if (lastPositions.ContainsKey(e.FullPath))
             {
                 lastPosition = lastPositions[e.FullPath];
             }
             if (e.ChangeType == WatcherChangeTypes.Changed)
             {
-                if (lastPosition == 0)
+                using (FileStream fileStream = new FileStream(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    var lastLines = File.ReadLines(e.FullPath).Reverse().Take(20).Reverse();
-                    foreach (var line in lastLines)
+                    fileStream.Seek(lastPosition, SeekOrigin.Begin);
+                    using (StreamReader reader = new StreamReader(fileStream))
                     {
-                        if (string.IsNullOrEmpty(line)) continue;
-                        await WriteLogAsync($"[{prefix}] {line} {Environment.NewLine}");
-                    }
-                    using (FileStream fileStream = new FileStream(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        if (fileStream.Length > 0)
+                        while (!reader.EndOfStream)
                         {
-                            lastPosition = fileStream.Length - 1;
+                            string line = reader.ReadLine();
+                            if (string.IsNullOrEmpty(line)) continue;
+                            await WriteLogAsync($"[{prefix}] {line} {Environment.NewLine}");
                         }
-                    }
-                }
-                else
-                {
-                    using (FileStream fileStream = new FileStream(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        fileStream.Seek(lastPosition, SeekOrigin.Begin);
-                        using (StreamReader reader = new StreamReader(fileStream))
-                        {
-                            while (!reader.EndOfStream)
-                            {
-                                string line = reader.ReadLine();
-                                if (string.IsNullOrEmpty(line)) continue;
-                                await WriteLogAsync($"[{prefix}] {line} {Environment.NewLine}");
-                            }
-                            lastPosition = fileStream.Position;
-                        }
+                        lastPosition = fileStream.Position;
                     }
                 }
             }
@@ -371,7 +387,7 @@ public partial class MainView : UserControl
                         var textBlock = new TextBlock
                         {
                             Text = s,
-                            FontSize = 10,
+                            FontSize = 12,
                             Foreground = Brush.Parse("#717171"),
                             TextWrapping = TextWrapping.Wrap,
                             Padding = new Thickness(0)
@@ -382,7 +398,7 @@ public partial class MainView : UserControl
                             Padding = new Thickness(0),
                             Margin = new Thickness(0)
                         };
-                        if (s.Contains("ERROR"))
+                        if (s.Contains("ERROR", StringComparison.InvariantCultureIgnoreCase))
                         {
                             textBlock.Foreground = Brush.Parse("#f25022");
                         }

@@ -70,10 +70,11 @@ public partial class MainPanel : UserControl
     {
         try
         {
+            await MainView.Instance.WriteLogAsync($"[SHELL] Executing {commands}");
             var process = Command.StartShell(commands);
             process.Start();
             MainView.Instance.BindLogStream(prefix, process.StandardOutput);
-            MainView.Instance.BindLogStream($"{prefix} ERROR", process.StandardError);
+            //MainView.Instance.BindLogStream($"{prefix} ERROR", process.StandardError);
             await process.WaitForExitAsync();
         }
         catch(Exception e)
