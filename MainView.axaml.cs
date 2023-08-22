@@ -38,8 +38,8 @@ public partial class MainView : UserControl
         }
     }
 
-    private readonly ConcurrentQueue<string> writeQ;
-    private readonly ConcurrentQueue<string> logs;
+    private readonly ConcurrentQueue<LogModel> writeQ;
+    private readonly ConcurrentQueue<LogModel> logs;
     private readonly List<Dictionary<string, string>> bongles;
     private readonly List<string> simimsis;
     private readonly ConcurrentDictionary<string, long> lastPositions;
@@ -47,8 +47,8 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
-        logs = new ConcurrentQueue<string>();
-        writeQ = new ConcurrentQueue<string>();
+        logs = new ConcurrentQueue<LogModel>();
+        writeQ = new ConcurrentQueue<LogModel>();
         bongles = new List<Dictionary<string, string>>();
         lastPositions = new ConcurrentDictionary<string, long>();
         simimsis = new List<string> { };
@@ -377,7 +377,7 @@ public partial class MainView : UserControl
         {
             while (true)
             {
-                if (logs.TryDequeue(out string s))
+                if (logs.TryDequeue(out LogModel s))
                 {
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
@@ -387,7 +387,7 @@ public partial class MainView : UserControl
                         }
                         var textBlock = new TextBlock
                         {
-                            Text = s,
+                            Text = s.ToString(),
                             FontSize = 12,
                             Foreground = Brush.Parse("#717171"),
                             TextWrapping = TextWrapping.Wrap,
@@ -399,7 +399,7 @@ public partial class MainView : UserControl
                             Padding = new Thickness(0),
                             Margin = new Thickness(0)
                         };
-                        if (s.Contains("ERROR", StringComparison.InvariantCultureIgnoreCase))
+                        if (s.Level.Contains("ERROR", StringComparison.InvariantCultureIgnoreCase))
                         {
                             textBlock.Foreground = Brush.Parse("#f25022");
                         }
@@ -418,7 +418,7 @@ public partial class MainView : UserControl
         {
             appPart += " ";
         }
-        writeQ.Enqueue($"{appPart} | [{DateTime.Now}] [{level.ToUpper()}] {msg}");
+        writeQ.Enqueue(new LogModel(app, level, msg));
     }
 
     public void StartLogWriter()
@@ -435,7 +435,7 @@ public partial class MainView : UserControl
         {
             while (true)
             {
-                if (writeQ.TryDequeue(out string s))
+                if (writeQ.TryDequeue(out LogModel s))
                 {
                     await writeLogAsync(s);
                     if(fw == null)
@@ -443,14 +443,14 @@ public partial class MainView : UserControl
                         Console.WriteLine(s);
                     } else
                     {
-                        await fw.WriteLineAsync(s);
+                        await fw.WriteLineAsync(s.ToString());
                     }
                 }
             }
         });
     }
 
-    public Task writeLogAsync(string s)
+    public Task writeLogAsync(LogModel s)
     {
         logs.Enqueue(s);
         return Task.FromResult(0);
@@ -473,13 +473,13 @@ public partial class MainView : UserControl
                     TextWrapping = TextWrapping.Wrap,
                 }
             };
-            await writeLogAsync($"[UIThread] Add device to SelectDeviceDialog");
+            Log("UIThread", "INFO", "Add device to SelectDeviceDialog");
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 dialog.bongleList.Items.Add(item);
             });
         }
-        await writeLogAsync($"[UIThread] Show SelectDeviceDialog");
+        Log("UIThread", "INFO", "Show SelectDeviceDialog");
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             modalRoot.Children.Clear();
