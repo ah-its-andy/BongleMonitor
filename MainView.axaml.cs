@@ -202,30 +202,15 @@ public partial class MainView : UserControl
                 await WriteLogAsync($"[Init] Remove old config file: {fileName}");
                 File.Delete(fileName);
             }
-            var smsdConfig = Config.GetGammuSmsDConfig(bongle["ID"], bongle["Device"]);
-            if (!Directory.Exists($"/share/gammu-smsd/{bongle["ID"]}/inbox"))
+            var dev = System.IO.Path.GetFileNameWithoutExtension(bongle["Device"]);
+            var smsdConfig = Config.GetGammuSmsDConfig(bongle["ID"], dev);
+            if (!Directory.Exists($"/share/gammu-smsd/{dev}"))
             {
-                await WriteLogAsync($"[Init] Create inbox directory: {bongle["ID"]}");
-                Directory.CreateDirectory($"/share/gammu-smsd/{bongle["ID"]}/inbox");
-            }
-            if (!Directory.Exists($"/share/gammu-smsd/{bongle["ID"]}/outbox"))
-            {
-                await WriteLogAsync($"[Init] Create outbox directory: {bongle["ID"]}");
-                Directory.CreateDirectory($"/share/gammu-smsd/{bongle["ID"]}/outbox");
-            }
-            if (!Directory.Exists($"/share/gammu-smsd/{bongle["ID"]}/sent"))
-            {
-                await WriteLogAsync($"[Init] Create sent directory: {bongle["ID"]}");
-                Directory.CreateDirectory($"/share/gammu-smsd/{bongle["ID"]}/sent");
-            }
-            if (!Directory.Exists($"/share/gammu-smsd/{bongle["ID"]}/error"))
-            {
-                await WriteLogAsync($"[Init] Create error directory: {bongle["ID"]}");
-                Directory.CreateDirectory($"/share/gammu-smsd/{bongle["ID"]}/error");
+                await WriteLogAsync($"[Init] Create inbox directory: /share/gammu-smsd/{dev}");
+                Directory.CreateDirectory($"/share/gammu-smsd/{dev}");
             }
             await WriteLogAsync($"[Init] Write gammu-smsd config file: {fileName}");
             await File.WriteAllTextAsync(fileName, smsdConfig);
-            var dev = System.IO.Path.GetFileNameWithoutExtension(bongle["Device"]);
             await WriteLogAsync($"[Init] Starting gammu-smsd@{dev}");
             var startService = Command.StartShell($"systemctl start gammu-smsd@{dev}");
             startService.Start();
@@ -241,6 +226,8 @@ public partial class MainView : UserControl
             smsresenderService.Start();
             BindLogStream($"SMSRESENDER@{dev}", startService.StandardOutput);
             BindLogStream($"SMSRESENDER@{dev} ERROR", startService.StandardError);
+            var notifyFileName = $"/share/gammu-smsd/{dev}/inboxIN{DateTime.Now.ToString("yyMMdd")}_{DateTime.Now.ToString("hhmmss")}_00_BongleManager_00.txt";
+            await File.WriteAllTextAsync(notifyFileName, $"Device {dev} has been started.");
         }
 
 

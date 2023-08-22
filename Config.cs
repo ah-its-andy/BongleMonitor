@@ -50,6 +50,7 @@ namespace BongleMonitor
         }
         public static string GetGammuSmsDConfig(string id, string dev)
         {
+            var shortDev = System.IO.Path.GetFileNameWithoutExtension(dev);
             var builder = new StringBuilder();
             builder.AppendLine("# Configuration file for Gammu SMS Daemon");
 
@@ -65,15 +66,15 @@ namespace BongleMonitor
             builder.AppendLine("[smsd]");
             builder.AppendLine("service = files");
             builder.AppendLine("# logfile = syslog");
-            builder.AppendLine($"logfile = /var/log/gammu-smsd/{dev}.log");
+            builder.AppendLine($"logfile = /var/log/gammu-smsd/{shortDev}.log");
             builder.AppendLine("# Increase for debugging information");
             builder.AppendLine("debuglevel = 0");
 
             builder.AppendLine("# Paths where messages are stored");
-            builder.AppendLine($"inboxpath = /share/gammu-smsd/{dev}/inbox");
-            builder.AppendLine($"outboxpath = /share/gammu-smsd/{dev}/outbox");
-            builder.AppendLine($"sentsmspath = /share/gammu-smsd/{dev}/sent");
-            builder.AppendLine($"errorsmspath = /share/gammu-smsd/{dev}/error");
+            builder.AppendLine($"inboxpath = /share/gammu-smsd/{shortDev}/inbox");
+            builder.AppendLine($"outboxpath = /share/gammu-smsd/{shortDev}/outbox");
+            builder.AppendLine($"sentsmspath = /share/gammu-smsd/{shortDev}/sent");
+            builder.AppendLine($"errorsmspath = /share/gammu-smsd/{shortDev}/error");
             return builder.ToString();
         }
 
