@@ -77,6 +77,7 @@ public partial class MainSingleView : UserControl
                     rootVisual.Children.Add(MainView.Instance);
                 }
             });
+            MainView.Instance.StartLogWriter();
             MainView.Instance.RenderLogs();
 
             try

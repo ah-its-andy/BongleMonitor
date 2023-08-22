@@ -166,8 +166,9 @@ public partial class MainView : UserControl
                 {
                     if(simimsis.Contains(imsi))
                     {
-
+                        return;
                     }
+                    simimsis.Add(imsi);
                     var phoneNumber = Environment.GetEnvironmentVariable($"IMSI_{imsi}");
                     if (!string.IsNullOrEmpty(phoneNumber))
                     {
