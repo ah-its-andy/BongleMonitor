@@ -223,14 +223,18 @@ public partial class MainView : UserControl
             await WriteLogAsync($"[Init] Starting gammu-smsd@{dev}");
             var startService = Command.StartShell($"systemctl start gammu-smsd@{dev}");
             startService.Start();
-            BindLogStream(dev, startService.StandardOutput);
-            BindLogStream($"{dev} ERROR", startService.StandardError);
+            BindLogStream($"GAMMU-SMSD@{dev}", startService.StandardOutput);
+            BindLogStream($"GAMMU-SMSD@{dev} ERROR", startService.StandardError);
             await startService.WaitForExitAsync();
             await WriteLogAsync($"[Init] Watch gammu-smsd@{dev}");
             var journal = Command.StartShell($"journalctl -u gammu-smsd@{dev} -f");
             journal.Start();
-            BindLogStream(dev, startService.StandardOutput);
-            BindLogStream($"{dev} ERROR", startService.StandardError);
+            BindLogStream($"GAMMU-SMSD@{dev}", startService.StandardOutput);
+            BindLogStream($"GAMMU-SMSD@{dev} ERROR", startService.StandardError);
+            var smsresenderService = Command.StartShell("systemctl start smsresender@{dev}");
+            smsresenderService.Start();
+            BindLogStream($"SMSRESENDER@{dev}", startService.StandardOutput);
+            BindLogStream($"SMSRESENDER@{dev} ERROR", startService.StandardError);
         }
 
 
@@ -239,7 +243,8 @@ public partial class MainView : UserControl
 
     public async Task InitLogView()
     {
-        await BindLogDirAsync("SMSd", "/tmp/gammu-smsd/");
+        await BindLogDirAsync("GAMMU-SMSD", "/var/log/gammu-smsd/");
+        await BindLogDirAsync("SMSRESENDER", "/var/log/smsresender/");
     }
     public async Task InitBottomBar()
     {
@@ -287,7 +292,7 @@ public partial class MainView : UserControl
             {
                 foreach (var file in files)
                 {
-                    await BindLogFileAsync(prefix, file);
+                    await BindLogFileAsync($"{prefix}@{System.IO.Path.GetFileNameWithoutExtension(file)}", file);
                 }
             }
         } catch (Exception ex)
