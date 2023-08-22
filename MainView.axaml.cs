@@ -222,7 +222,7 @@ public partial class MainView : UserControl
             journal.Start();
             BindLogStream($"GAMMU-SMSD@{dev}", startService.StandardOutput);
             BindLogStream($"GAMMU-SMSD@{dev} ERROR", startService.StandardError);
-            var smsresenderService = Command.StartShell("systemctl start smsresender@{dev}");
+            var smsresenderService = Command.StartShell($"systemctl start smsresender@{dev}");
             smsresenderService.Start();
             BindLogStream($"SMSRESENDER@{dev}", startService.StandardOutput);
             BindLogStream($"SMSRESENDER@{dev} ERROR", startService.StandardError);
