@@ -22,7 +22,7 @@ namespace BongleMonitor
             startInfo.RedirectStandardOutput = true; // 將輸出重定向到程序
             startInfo.UseShellExecute = false; // 不使用shell啟動程序
             startInfo.CreateNoWindow = true; // 不創建新窗口
-
+            startInfo.RedirectStandardError = true;
             // 創建一個新的Process對象
             Process process = new Process();
             process.StartInfo = startInfo;
