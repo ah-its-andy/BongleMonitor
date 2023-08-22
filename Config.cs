@@ -65,15 +65,15 @@ namespace BongleMonitor
             builder.AppendLine("[smsd]");
             builder.AppendLine("service = files");
             builder.AppendLine("# logfile = syslog");
-            builder.AppendLine($"logfile = /var/log/gammu-smsd/{id}.log");
+            builder.AppendLine($"logfile = /var/log/gammu-smsd/{dev}.log");
             builder.AppendLine("# Increase for debugging information");
             builder.AppendLine("debuglevel = 0");
 
             builder.AppendLine("# Paths where messages are stored");
-            builder.AppendLine($"inboxpath = /share/gammu-smsd/{id}/inbox");
-            builder.AppendLine($"outboxpath = /share/gammu-smsd/{id}/outbox");
-            builder.AppendLine($"sentsmspath = /share/gammu-smsd/{id}/sent");
-            builder.AppendLine($"errorsmspath = /share/gammu-smsd/{id}/error");
+            builder.AppendLine($"inboxpath = /share/gammu-smsd/{dev}/inbox");
+            builder.AppendLine($"outboxpath = /share/gammu-smsd/{dev}/outbox");
+            builder.AppendLine($"sentsmspath = /share/gammu-smsd/{dev}/sent");
+            builder.AppendLine($"errorsmspath = /share/gammu-smsd/{dev}/error");
             return builder.ToString();
         }
 
