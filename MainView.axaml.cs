@@ -203,7 +203,7 @@ public partial class MainView : UserControl
                 File.Delete(fileName);
             }
             var dev = System.IO.Path.GetFileNameWithoutExtension(bongle["Device"]);
-            var smsdConfig = Config.GetGammuSmsDConfig(bongle["ID"], dev);
+            var smsdConfig = Config.GetGammuSmsDConfig(bongle["ID"], bongle["Device"]);
             if (!Directory.Exists($"/share/gammu-smsd/{dev}"))
             {
                 await WriteLogAsync($"[Init] Create inbox directory: /share/gammu-smsd/{dev}");
@@ -226,7 +226,7 @@ public partial class MainView : UserControl
             smsresenderService.Start();
             BindLogStream($"SMSRESENDER@{dev}", startService.StandardOutput);
             BindLogStream($"SMSRESENDER@{dev} ERROR", startService.StandardError);
-            var notifyFileName = $"/share/gammu-smsd/{dev}/inboxIN{DateTime.Now.ToString("yyMMdd")}_{DateTime.Now.ToString("hhmmss")}_00_BongleManager_00.txt";
+            var notifyFileName = $"/share/gammu-smsd/{dev}/IN{DateTime.Now.ToString("yyMMdd")}_{DateTime.Now.ToString("hhmmss")}_00_BongleManager_00.txt";
             await File.WriteAllTextAsync(notifyFileName, $"Device {dev} has been started.");
         }
 

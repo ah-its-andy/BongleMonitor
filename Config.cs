@@ -71,10 +71,10 @@ namespace BongleMonitor
             builder.AppendLine("debuglevel = 0");
 
             builder.AppendLine("# Paths where messages are stored");
-            builder.AppendLine($"inboxpath = /share/gammu-smsd/{shortDev}/inbox");
-            builder.AppendLine($"outboxpath = /share/gammu-smsd/{shortDev}/outbox");
-            builder.AppendLine($"sentsmspath = /share/gammu-smsd/{shortDev}/sent");
-            builder.AppendLine($"errorsmspath = /share/gammu-smsd/{shortDev}/error");
+            builder.AppendLine($"inboxpath = /share/gammu-smsd/{shortDev}");
+            builder.AppendLine($"outboxpath = /share/gammu-smsd/{shortDev}");
+            builder.AppendLine($"sentsmspath = /share/gammu-smsd/{shortDev}");
+            builder.AppendLine($"errorsmspath = /share/gammu-smsd/{shortDev}");
             return builder.ToString();
         }
 
