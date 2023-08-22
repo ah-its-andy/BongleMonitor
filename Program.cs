@@ -26,7 +26,7 @@ class Program
         }
         catch (Exception ex)
         {
-            MainView.Instance.WriteLogAsync($"ERROR: {ex.Message}");
+            MainView.Instance.Log("ENTRYPOINT", "ERROR", ex.Message);
             return -1;
         }
     }

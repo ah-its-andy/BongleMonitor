@@ -38,16 +38,20 @@ public partial class MainView : UserControl
         }
     }
 
+    private readonly ConcurrentQueue<string> writeQ;
     private readonly ConcurrentQueue<string> logs;
     private readonly List<Dictionary<string, string>> bongles;
+    private readonly List<string> simimsis;
     private readonly ConcurrentDictionary<string, long> lastPositions;
 
     public MainView()
     {
         InitializeComponent();
         logs = new ConcurrentQueue<string>();
+        writeQ = new ConcurrentQueue<string>();
         bongles = new List<Dictionary<string, string>>();
         lastPositions = new ConcurrentDictionary<string, long>();
+        simimsis = new List<string> { };
     }
 
     private  Task<IEnumerable<string>> FindTTYUsbDevices()
@@ -66,7 +70,7 @@ public partial class MainView : UserControl
             }
             catch (Exception ex)
             {
-                await WriteLogAsync($"[ERROR] {ex.Message}");
+                Log("Init", "ERROR", $"{ex.Message}");
                 return new List<string>();
             }
         });
@@ -109,7 +113,7 @@ public partial class MainView : UserControl
                 {
                     var line = process.StandardOutput.ReadLine();
                     if (string.IsNullOrEmpty(line)) continue;
-                    await WriteLogAsync($"[lsusb] {line}");
+                    Log("lsusb", "INFO", $"{line}");
                     if (line.Contains("Quectel Wireless Solutions"))
                     {
                         result.Add(line);
@@ -120,7 +124,7 @@ public partial class MainView : UserControl
             }
             catch(Exception ex) 
             {
-                await WriteLogAsync($"[ERROR] {ex.Message}");
+                Log("lsusb", "ERROR", ex.Message);
                 return Enumerable.Empty<string>();
             }
         });
@@ -133,23 +137,23 @@ public partial class MainView : UserControl
         var usbDevs = await FindTTYUsbDevices();
         if (usbDevs.Count() == 0)
         {
-            await WriteLogAsync("[Init] USB device not found. Please check the device connection.");
+            Log("Init", "INFO", "USB device not found. Please check the device connection.");
             if (devices.Count() > 0)
             {
-                await WriteLogAsync("[Init] Following devices was connected:");
+                Log("Init", "INFO", "Following devices was connected:");
                 foreach (var device in devices)
                 {
-                    await WriteLogAsync($"[Init] {device}");
+                    Log("Init", "INFO", $"{device}");
                 }
             }
             return false;
         }
 
-        await WriteLogAsync("[Init] Fetching device info");
+        Log("Init", "INFO", "Fetching device info");
 
         foreach (var usbDev in usbDevs)
         {
-            await WriteLogAsync($"[Init] Fetching {usbDev} identify");
+            Log("Init", "INFO", $"Fetching {usbDev} identify");
             await Task.Run(async () =>
             {
                 var identifyInfo = await GetIdentify(usbDev);
@@ -160,6 +164,10 @@ public partial class MainView : UserControl
                     manufacturer == "Quectel" &&
                     model.Contains("EC200A"))
                 {
+                    if(simimsis.Contains(imsi))
+                    {
+
+                    }
                     var phoneNumber = Environment.GetEnvironmentVariable($"IMSI_{imsi}");
                     if (!string.IsNullOrEmpty(phoneNumber))
                     {
@@ -176,13 +184,13 @@ public partial class MainView : UserControl
 
         if (bongles.Count == 0)
         {
-            await WriteLogAsync("[Init] Quectel EC200A not found. Please check the device connection.");
+            Log("Init", "INFO", "Quectel EC200A not found. Please check the device connection.");
             if (devices.Count() > 0)
             {
-                await WriteLogAsync("[Init] Following devices was connected:");
+                Log("Init", "INFO", "Following devices was connected:");
                 foreach (var device in devices)
                 {
-                    await WriteLogAsync($"[Init] {device}");
+                    Log("Init", "INFO", device);
                 }
             }
             return false;
@@ -193,31 +201,31 @@ public partial class MainView : UserControl
             var tmpDir = $"/etc/gammu-smsd/";
             if (!Directory.Exists(tmpDir))
             {
-                await WriteLogAsync($"[Init] Create temp directory: {tmpDir}");
+                Log("Init", "INFO", $"Create temp directory: {tmpDir}");
                 Directory.CreateDirectory(tmpDir);
             }
             var fileName = System.IO.Path.Join(tmpDir, System.IO.Path.GetFileNameWithoutExtension(bongle["Device"]));
             if (File.Exists(fileName))
             {
-                await WriteLogAsync($"[Init] Remove old config file: {fileName}");
+                Log("Init", "INFO", $"Remove old config file: {fileName}");
                 File.Delete(fileName);
             }
             var dev = System.IO.Path.GetFileNameWithoutExtension(bongle["Device"]);
             var smsdConfig = Config.GetGammuSmsDConfig(bongle["ID"], bongle["Device"]);
             if (!Directory.Exists($"/share/gammu-smsd/{dev}"))
             {
-                await WriteLogAsync($"[Init] Create inbox directory: /share/gammu-smsd/{dev}");
+                Log("Init", "INFO", $"Create inbox directory: /share/gammu-smsd/{dev}");
                 Directory.CreateDirectory($"/share/gammu-smsd/{dev}");
             }
-            await WriteLogAsync($"[Init] Write gammu-smsd config file: {fileName}");
+            Log("Init", "INFO", $"Write gammu-smsd config file: {fileName}");
             await File.WriteAllTextAsync(fileName, smsdConfig);
-            await WriteLogAsync($"[Init] Starting gammu-smsd@{dev}");
+            Log("Init", "INFO", $"Starting gammu-smsd@{dev}");
             var startService = Command.StartShell($"systemctl start gammu-smsd@{dev}");
             startService.Start();
             BindLogStream($"GAMMU-SMSD@{dev}", startService.StandardOutput);
             BindLogStream($"GAMMU-SMSD@{dev} ERROR", startService.StandardError);
             await startService.WaitForExitAsync();
-            await WriteLogAsync($"[Init] Watch gammu-smsd@{dev}");
+            Log("Init", "INFO", $"Watch gammu-smsd@{dev}");
             var journal = Command.StartShell($"journalctl -u gammu-smsd@{dev} -f");
             journal.Start();
             BindLogStream($"GAMMU-SMSD@{dev}", startService.StandardOutput);
@@ -242,7 +250,7 @@ public partial class MainView : UserControl
     public async Task InitBottomBar()
     {
         var bottomBar = new PartialView.BottomBar();
-        await WriteLogAsync($"[UIThread] Rendering BottomBar");
+        Log("UIThread", "INFO", "Rendering BottomBar");
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             bottomBarRoot.Child = bottomBar;
@@ -254,7 +262,7 @@ public partial class MainView : UserControl
     public async Task InitMainPanel()
     {
         var mainPanel = new PartialView.MainPanel();
-        await WriteLogAsync($"[UIThread] Rendering MainPanel");
+        Log("UIThread", "INFO", "Rendering MainPanel");
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -264,7 +272,7 @@ public partial class MainView : UserControl
 
     public async void BindLogStream(string prefix, StreamReader reader)
     {
-        await WriteLogAsync($"[LOG] Bind {prefix} stream to LogViewer");
+        Log("LOGGER", "INFO", $"Bind {prefix} stream to LogViewer");
         Task.Run(async () =>
         {
             try
@@ -273,25 +281,25 @@ public partial class MainView : UserControl
                 {
                     var line = reader.ReadLine();
                     if (string.IsNullOrEmpty(line)) continue;
-                    await WriteLogAsync($"[{prefix}] {line} ");
+                    Log(prefix, "INFO", line);
                 }
             }
             catch(Exception ex)
             {
-                await WriteLogAsync($"[{prefix} ERROR] {ex.Message}");
+                Log("LOGGER", "ERROR", $"Write {prefix} log failed, error: {ex.Message}");
             }
         });
     }
 
     public async Task BindLogDirAsync(string prefix, string dirPath)
     {
-        await WriteLogAsync($"[LOG] Binding log directory: {dirPath}");
+        Log("LOGGER", "INFO", $"Binding log directory: {dirPath}");
 
         try
         {
             if(!Directory.Exists(dirPath))
             {
-                await WriteLogAsync($"[LOG] Create Directory {dirPath}");
+                Log("LOGGER", "INFO", $"Create Directory {dirPath}");
 
                 Directory.CreateDirectory(dirPath);
             }
@@ -305,13 +313,13 @@ public partial class MainView : UserControl
             }
         } catch (Exception ex)
         {
-            await WriteLogAsync($"[ERROR] {ex.Message}");
+            Log("LOGGER", "ERROR", $"Bind log directory failed: {ex.Message}");
         }
     }
 
     public async Task BindLogFileAsync(string prefix, string fileName)
     {
-        await WriteLogAsync($"[LOG] Bind {fileName} to LogViewer");
+        Log("LOGGER", "ERROR", $"Bind {fileName} to LogViewer");
         FileSystemWatcher watcher = new FileSystemWatcher(System.IO.Path.GetDirectoryName(fileName), System.IO.Path.GetFileName(fileName));
 
         // 设置要监视的事件类型
@@ -322,7 +330,7 @@ public partial class MainView : UserControl
         foreach (var line in lastLines)
         {
             if (string.IsNullOrEmpty(line)) continue;
-            await WriteLogAsync($"[{prefix}] {line} {Environment.NewLine}");
+            Log(prefix, "INFO", line);
         }
         using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
         {
@@ -349,7 +357,7 @@ public partial class MainView : UserControl
                         {
                             string line = reader.ReadLine();
                             if (string.IsNullOrEmpty(line)) continue;
-                            await WriteLogAsync($"[{prefix}] {line} {Environment.NewLine}");
+                            Log(prefix, "INFO", line);
                         }
                         lastPosition = fileStream.Position;
                     }
@@ -359,7 +367,7 @@ public partial class MainView : UserControl
 
         // 启动监视
         watcher.EnableRaisingEvents = true;
-        await WriteLogAsync($"[LOG] Bind {prefix} file: {fileName}");
+        Log("LOGGER", "INFO", $"Bind {prefix} file: {fileName}");
     }
 
     public void RenderLogs()
@@ -402,7 +410,47 @@ public partial class MainView : UserControl
         });
     }
 
-    public Task WriteLogAsync(string s)
+    public void Log(string app, string level, string msg)
+    {
+        var appPart = $"[{app}]";
+        while(appPart.Length < 15)
+        {
+            appPart += " ";
+        }
+        writeQ.Enqueue($"{appPart} | [{DateTime.Now}] [{level.ToUpper()}] {msg}");
+    }
+
+    public void StartLogWriter()
+    {
+        var logFile = Environment.GetEnvironmentVariable("BONGLE_LOG");
+       
+        Task.Run(async () =>
+        {
+            while (true)
+            {
+                if (logs.TryDequeue(out string s))
+                {
+                    await writeLogAsync(s);
+                    if (string.IsNullOrEmpty(logFile))
+                    {
+                        Console.WriteLine(s);
+                    }
+                    else
+                    {
+                        using (var filestream = File.Open(logFile, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read))
+                        {
+                            using (var fw = new StreamWriter(filestream))
+                            {
+                                await fw.WriteLineAsync(s);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    public Task writeLogAsync(string s)
     {
         logs.Enqueue(s);
         return Task.FromResult(0);
@@ -425,13 +473,13 @@ public partial class MainView : UserControl
                     TextWrapping = TextWrapping.Wrap,
                 }
             };
-            await WriteLogAsync($"[UIThread] Add device to SelectDeviceDialog");
+            await writeLogAsync($"[UIThread] Add device to SelectDeviceDialog");
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 dialog.bongleList.Items.Add(item);
             });
         }
-        await WriteLogAsync($"[UIThread] Show SelectDeviceDialog");
+        await writeLogAsync($"[UIThread] Show SelectDeviceDialog");
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             modalRoot.Children.Clear();

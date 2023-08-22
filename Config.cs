@@ -88,7 +88,7 @@ namespace BongleMonitor
                 {
                     continue;
                 }
-                await MainView.Instance.WriteLogAsync($"[GAMMU-IDENTIFY] {line}");
+                MainView.Instance.Log("GAMMU-IDENTIFY", "INFO", line);
                 var index = line.IndexOf(':');
                 if(index == -1)
                 {

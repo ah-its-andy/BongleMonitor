@@ -28,7 +28,7 @@ public partial class BottomBar : UserControl
             Foreground = Brush.Parse("#717171"),
             Text = "Running"
         };
-        await MainView.Instance.WriteLogAsync($"[UIThread] Rendering CalculateTime");
+        MainView.Instance.Log("UIThread", "INFO", "Rendering CalculateTime");
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -57,7 +57,7 @@ public partial class BottomBar : UserControl
 
     public async Task FindIPAddresses()
     {
-        await MainView.Instance.WriteLogAsync($"[UIThread] Rendering IP Addresses");
+        MainView.Instance.Log("UIThread", "INFO", "Rendering IP Addresses");
 
         var index = 0;
         foreach (var ipAddr in GetLocalIPAddresses())

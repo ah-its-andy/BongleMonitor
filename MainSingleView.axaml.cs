@@ -68,7 +68,7 @@ public partial class MainSingleView : UserControl
 
         Loaded += async (sender, e) =>
         {
-            await MainView.Instance.WriteLogAsync($"[UIThread] Rendering MainView");
+            MainView.Instance.Log("UIThread", "INFO", "Rendering MainView");
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 if (MainView.Instance.Parent == null)
@@ -88,7 +88,7 @@ public partial class MainSingleView : UserControl
             }
             catch (Exception ex)
             {
-                await MainView.Instance.WriteLogAsync($"[ERROR] {ex.Message}");
+                MainView.Instance.Log("UIThread", "INFO", ex.Message);
             }
         };
     }

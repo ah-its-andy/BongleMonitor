@@ -38,10 +38,10 @@ public partial class MainPanel : UserControl
         var selectedDev = await MainView.Instance.ShowBongleList();
         if(string.IsNullOrEmpty(selectedDev))
         {
-            await MainView.Instance.WriteLogAsync("[systemctl] No device selected.");
+            MainView.Instance.Log("SYSTEMD", "INFO", "No device selected.");
             return;
         }
-        await StartAsync("systemctl", $"systemctl stop gammu-smsd@{Path.GetFileNameWithoutExtension(selectedDev)}");
+        await StartAsync("SYSTEMD", $"systemctl stop gammu-smsd@{Path.GetFileNameWithoutExtension(selectedDev)}");
     }
 
     private async void BtnSvcStart_Click(object? sender, RoutedEventArgs e)
@@ -49,10 +49,10 @@ public partial class MainPanel : UserControl
         var selectedDev = await MainView.Instance.ShowBongleList();
         if (string.IsNullOrEmpty(selectedDev))
         {
-            await MainView.Instance.WriteLogAsync("[systemctl] No device selected.");
+            MainView.Instance.Log("SYSTEMD", "INFO", "No device selected.");
             return;
         }
-        await StartAsync("systemctl", $"systemctl start gammu-smsd@{Path.GetFileNameWithoutExtension(selectedDev)}");
+        await StartAsync("SYSTEMD", $"systemctl start gammu-smsd@{Path.GetFileNameWithoutExtension(selectedDev)}");
     }
 
     private async void BtnSvcStatus_Click(object? sender, RoutedEventArgs e)
@@ -60,17 +60,17 @@ public partial class MainPanel : UserControl
         var selectedDev = await MainView.Instance.ShowBongleList();
         if (string.IsNullOrEmpty(selectedDev))
         {
-            await MainView.Instance.WriteLogAsync("[systemctl] No device selected.");
+            MainView.Instance.Log("SYSTEMD", "INFO", "No device selected.");
             return;
         }
-        await StartAsync("systemctl", $"systemctl status gammu-smsd@{Path.GetFileNameWithoutExtension(selectedDev)}");
+        await StartAsync("SYSTEMD", $"systemctl status gammu-smsd@{Path.GetFileNameWithoutExtension(selectedDev)}");
     }
 
     public async Task StartAsync(string prefix, string commands)
     {
         try
         {
-            await MainView.Instance.WriteLogAsync($"[SHELL] Executing {commands}");
+            MainView.Instance.Log("SHELL", "INFO", $"Executing {commands}");
             var process = Command.StartShell(commands);
             process.Start();
             MainView.Instance.BindLogStream(prefix, process.StandardOutput);
@@ -79,7 +79,7 @@ public partial class MainPanel : UserControl
         }
         catch(Exception e)
         {
-            await MainView.Instance.WriteLogAsync($"[ERROR] {e.Message}");
+            MainView.Instance.Log("SHELL", "ERROR", e.Message);
         }
     }
 
