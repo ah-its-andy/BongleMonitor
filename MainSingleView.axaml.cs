@@ -42,6 +42,7 @@ public partial class MainSingleView : UserControl
                 if (mask.IsVisible)
                 {
                     mask.IsVisible = false;
+                    MainView.Instance.Log("UIThread", "INFO", "Hide mask layer");
                 }
             });
         };
@@ -58,6 +59,7 @@ public partial class MainSingleView : UserControl
                         if(!mask.IsVisible) 
                         {
                             mask.IsVisible = true;
+                            MainView.Instance.Log("UIThread", "INFO", "Show mask layer");
                          }
                     });
 
