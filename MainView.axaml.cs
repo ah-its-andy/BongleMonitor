@@ -429,7 +429,7 @@ public partial class MainView : UserControl
         {
             while (true)
             {
-                if (logs.TryDequeue(out string s))
+                if (writeQ.TryDequeue(out string s))
                 {
                     await writeLogAsync(s);
                     if (string.IsNullOrEmpty(logFile))
