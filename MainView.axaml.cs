@@ -168,7 +168,6 @@ public partial class MainView : UserControl
                     {
                         return;
                     }
-                    simimsis.Add(imsi);
                     var phoneNumber = Environment.GetEnvironmentVariable($"IMSI_{imsi}");
                     if (!string.IsNullOrEmpty(phoneNumber))
                     {
@@ -179,6 +178,7 @@ public partial class MainView : UserControl
                         identifyInfo["ID"] = imsi;
                     }
                     bongles.Add(identifyInfo);
+                    simimsis.Add(imsi);
                 }
             });
         }
