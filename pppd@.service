@@ -1,0 +1,11 @@
+﻿[Unit]
+Description=PPPd for 4G bongle
+After=mysql.service postgresql.service network-online.target
+
+[Service]
+# Run daemon as root user
+ExecStart=pppd call /tmp/ppp/peers/%i/ppp
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

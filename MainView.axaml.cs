@@ -237,8 +237,43 @@ public partial class MainView : UserControl
             BindLogStream($"SMSRESENDER@{dev} ERROR", startService.StandardError);
             var notifyFileName = $"/share/gammu-smsd/{dev}/IN{DateTime.Now.ToString("yyMMdd")}_{DateTime.Now.ToString("hhmmss")}_00_BongleManager_00.txt";
             await File.WriteAllTextAsync(notifyFileName, $"Device {dev} has been started.");
+            if ("1" == Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_ENABLED"))
+            {
+                var pppDir = $"/tmp/ppp/peers/{dev}";
+                Directory.CreateDirectory(pppDir);
+                var pppFileName = System.IO.Path.Join(pppDir, "ppp");
+                if(!File.Exists(pppFileName))
+                {
+                    File.Delete(pppFileName);
+                }
+                var pppConf = Config.GetPPPConfig(bongle["Device"]);
+                await File.WriteAllTextAsync(pppFileName, pppConf );
+                var apn = Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_APN");
+                if (string.IsNullOrEmpty(apn))
+                {
+                    apn = "cmhk";
+                }
+                var dialNumber = Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_DIALNUMBER");
+                if (string.IsNullOrEmpty(dialNumber))
+                {
+                    dialNumber = "*99#";
+                }
+                var pppConnect = Config.GetPPPConnectConfig(apn, dialNumber);
+                var pppConnectFile = System.IO.Path.Join(pppDir, "ppp-chat-connect");
+                if (!File.Exists(pppConnectFile))
+                {
+                    File.Delete(pppConnectFile);
+                }
+                await File.WriteAllTextAsync(pppConnectFile, pppConnect);
+                var pppDisconnect = Config.GetPPPDisconnectConfig();
+                var pppDisconnectFile = System.IO.Path.Join(pppDir, "ppp-chat-disconnect");
+                if (!File.Exists(pppDisconnectFile))
+                {
+                    File.Delete(pppDisconnectFile);
+                }
+                await File.WriteAllTextAsync(pppDisconnectFile, pppDisconnect);
+            }
         }
-
 
         return true;
     }
