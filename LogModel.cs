@@ -21,9 +21,11 @@ namespace BongleMonitor
         public override string ToString()
         {
             var appPart = $"[{App}]";
-            while (appPart.Length < 15)
+            var len = appPart.Length;
+            while (len < 15)
             {
-                appPart += " ";
+                appPart += "\t";
+                len = len + 3;
             }
             return $"{appPart} | [{DateTime.Now}] [{Level.ToUpper()}] {Message}";
         }
