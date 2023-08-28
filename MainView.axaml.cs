@@ -229,12 +229,12 @@ public partial class MainView : UserControl
             Log("Init", "INFO", $"Watch gammu-smsd@{dev}");
             var journal = Command.StartShell($"journalctl -u gammu-smsd@{dev} -f");
             journal.Start();
-            BindLogStream($"GAMMU-SMSD@{dev}", startService.StandardOutput);
-            BindLogStream($"GAMMU-SMSD@{dev} ERROR", startService.StandardError);
+            BindLogStream($"GAMMU-SMSD@{dev}", journal.StandardOutput);
+            BindLogStream($"GAMMU-SMSD@{dev} ERROR", journal.StandardError);
             var smsresenderService = Command.StartShell($"systemctl start smsresender@{dev}");
             smsresenderService.Start();
-            BindLogStream($"SMSRESENDER@{dev}", startService.StandardOutput);
-            BindLogStream($"SMSRESENDER@{dev} ERROR", startService.StandardError);
+            BindLogStream($"SMSRESENDER@{dev}", smsresenderService.StandardOutput);
+            BindLogStream($"SMSRESENDER@{dev} ERROR", smsresenderService.StandardError);
             var notifyFileName = $"/share/gammu-smsd/{dev}/IN{DateTime.Now.ToString("yyMMdd")}_{DateTime.Now.ToString("hhmmss")}_00_BongleManager_00.txt";
             await File.WriteAllTextAsync(notifyFileName, $"SMS service@{dev} has been started.");
             var pppDir = $"/etc/ppp/peers/";
@@ -285,33 +285,35 @@ public partial class MainView : UserControl
                 BindLogStream($"PPPd@{dev}", pppService.StandardOutput);
                 BindLogStream($"PPPd@{dev} ERROR", pppService.StandardError);
                 await pppService.WaitForExitAsync();
-                Log("Init", "INFO", $"Watch gammu-smsd@{dev}");
+                Log("Init", "INFO", $"Watch PPPd@{dev}");
                 var pppJournal = Command.StartShell($"journalctl -u pppd@{dev} -f");
                 pppJournal.Start();
-                BindLogStream($"PPPd@{dev}", startService.StandardOutput);
-                BindLogStream($"PPPd@{dev} ERROR", startService.StandardError);
+                BindLogStream($"PPPd@{dev}", pppJournal.StandardOutput);
+                BindLogStream($"PPPd@{dev} ERROR", pppJournal.StandardError);
+                Log("PPPd", "INFO", "Waiting for ppp dail completed.");
                 await Task.Delay(TimeSpan.FromMinutes(1));
 
-                var v2rayConf = Config.GetV2RayConfig(dev, "ppp0");
-                var v2rayConfDir = "/tmp/v2fly-config";
-                if(Directory.Exists(v2rayConfDir))
-                {
-                    Directory.Delete(v2rayConfDir, true);
-                }
-                Directory.CreateDirectory(v2rayConfDir);
-                var v2rayConfFileName = System.IO.Path.Join(v2rayConfDir, $"{dev}.json");
-                await File.WriteAllTextAsync(v2rayConfFileName, v2rayConf);
+                var setIPRouteService = Command.StartShell($"systemctl start SetIPRoute");
+                setIPRouteService.Start();
+                BindLogStream($"ROUTE", setIPRouteService.StandardOutput);
+                BindLogStream($"ROUTE ERROR", setIPRouteService.StandardError);
+                await setIPRouteService.WaitForExitAsync();
+                Log("Init", "INFO", $"Watch SetIPRoute");
+                var setIPRouteJournal = Command.StartShell($"journalctl -u SetIPRoute -f");
+                setIPRouteJournal.Start();
+                BindLogStream($"ROUTE", setIPRouteJournal.StandardOutput);
+                BindLogStream($"ROUTE ERROR", setIPRouteJournal.StandardError);
 
-                var v2rayService = Command.StartShell($"systemctl start v2ray@{dev}");
-                pppService.Start();
-                BindLogStream($"V2RAY@{dev}", pppService.StandardOutput);
-                BindLogStream($"V2RAY@{dev} ERROR", pppService.StandardError);
-                await pppService.WaitForExitAsync();
-                Log("Init", "INFO", $"Watch gammu-smsd@{dev}");
-                var v2rayJournal = Command.StartShell($"journalctl -u v2ray@{dev} -f");
-                pppJournal.Start();
-                BindLogStream($"V2RAY@{dev}", startService.StandardOutput);
-                BindLogStream($"V2RAY@{dev} ERROR", startService.StandardError);
+                var v2rayService = Command.StartShell($"systemctl start v2ray");
+                v2rayService.Start();
+                BindLogStream($"V2RAY", v2rayService.StandardOutput);
+                BindLogStream($"V2RAY ERROR", v2rayService.StandardError);
+                await v2rayService.WaitForExitAsync();
+                Log("Init", "INFO", $"Watch v2ray");
+                var v2rayJournal = Command.StartShell($"journalctl -u v2ray -f");
+                v2rayJournal.Start();
+                BindLogStream($"V2RAY", v2rayJournal.StandardOutput);
+                BindLogStream($"V2RAY ERROR", v2rayJournal.StandardError);
             }
         }
 

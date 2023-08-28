@@ -1,0 +1,12 @@
+﻿[Unit]
+Description=SET IP Routes
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/andrew/bongle/SetIPRoute.py
+WorkingDirectory=/home/andrew
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

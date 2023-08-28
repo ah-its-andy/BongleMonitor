@@ -4,7 +4,7 @@ After=mysql.service postgresql.service network-online.target
 
 [Service]
 # Run daemon as root user
-ExecStart=/home/andrew/v2ray/v2ray run -config /tmp/v2fly-config/%i.json
+ExecStart=/home/andrew/v2ray/v2ray run -config /home/andrew/bongle/socks.json
 Type=simple
 User=root
 Group=root

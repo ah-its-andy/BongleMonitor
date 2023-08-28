@@ -25,6 +25,12 @@
     <None Update="pppd%40.service">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="SetIPRoute.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="SetIPRoute.service">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="smsresender%40.service">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
