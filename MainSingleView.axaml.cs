@@ -28,45 +28,60 @@ public partial class MainSingleView : UserControl
         }
     }
 
-    private int idleSeconds;
-
+    private int tapped;
+    private Mutex tapperMux;
+    private System.Timers.Timer _maskTimer;
 
     public MainSingleView()
     {
         InitializeComponent();
-        this.Tapped += async (sender, e) =>
-        {
-            Interlocked.Exchange(ref idleSeconds, 0);
-            await Dispatcher.UIThread.InvokeAsync(() =>
+        tapperMux = new Mutex();
+        _maskTimer = new System.Timers.Timer(TimeSpan.FromMinutes(5).TotalMilliseconds);
+        _maskTimer.Elapsed += async (sender, e) => {
+            tapperMux.WaitOne();
+            try
             {
-                if (mask.IsVisible)
+                if(tapped > 0)
                 {
-                    mask.IsVisible = false;
-                    MainView.Instance.Log("UIThread", "INFO", "Hide mask layer");
-                }
-            });
-        };
-
-        Task.Run(() =>
-        {
-            var timer = new System.Timers.Timer(10000);
-            timer.Elapsed += async (sender, e) => {
-                var idleSec = Interlocked.Increment(ref idleSeconds); 
-                if(idleSeconds > 6)
+                    tapped = 0;
+                } else
                 {
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        if(!mask.IsVisible) 
-                        {
-                            mask.IsVisible = true;
-                            MainView.Instance.Log("UIThread", "INFO", "Show mask layer");
-                         }
+                        mask.IsVisible = true;
+                        MainView.Instance.Log("UIThread", "INFO", "Show mask layer");
                     });
-
                 }
-            };
-            timer.Start();
-        });
+            }
+            finally
+            {
+                tapperMux.ReleaseMutex();
+            }
+        };
+        Tapped += async (sender, e) =>
+        {
+            tapperMux.WaitOne();
+            try
+            {
+                if(tapped == 0)
+                {
+                    tapped = 1;
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        if (mask.IsVisible)
+                        {
+                            mask.IsVisible = false;
+                            MainView.Instance.Log("UIThread", "INFO", "Hide mask layer");
+                        }
+                    });
+                }
+            }
+            finally
+            {
+                tapperMux.ReleaseMutex();
+            }
+            
+        };
 
         Loaded += async (sender, e) =>
         {
@@ -88,6 +103,7 @@ public partial class MainSingleView : UserControl
                 await MainView.Instance.InitGammuSmsD();
                 await MainView.Instance.InitMainPanel();
                 await MainView.Instance.InitLogView();
+                _maskTimer.Start();
             }
             catch (Exception ex)
             {

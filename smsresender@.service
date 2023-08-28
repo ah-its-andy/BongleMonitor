@@ -1,0 +1,11 @@
+﻿[Unit]
+Description=SMS daemon for Resend
+After=mysql.service postgresql.service network-online.target
+
+[Service]
+# Run daemon as root user
+ExecStart=/usr/bin/smsresender --credential /etc/smsresender/credentials --queue /tmp/smsresender/%i --watch /share/gammu-smsd/%i --log /var/log/smsresender/%i.log
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
