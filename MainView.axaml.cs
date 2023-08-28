@@ -94,7 +94,7 @@ public partial class MainView : UserControl
         var process = Command.StartShell($"gammu -c {fileName} identify");
         process.Start();
         var result = await Config.UnmarshalGammuIdentifyAsync(process.StandardOutput);
-        process.WaitForExit();
+        await process.WaitAsync();
         return result;
     }
 
@@ -119,7 +119,7 @@ public partial class MainView : UserControl
                         result.Add(line);
                     }
                 }
-                process.WaitForExit();
+                await process.WaitAsync();
                 return result;
             }
             catch(Exception ex) 
@@ -236,42 +236,82 @@ public partial class MainView : UserControl
             BindLogStream($"SMSRESENDER@{dev}", startService.StandardOutput);
             BindLogStream($"SMSRESENDER@{dev} ERROR", startService.StandardError);
             var notifyFileName = $"/share/gammu-smsd/{dev}/IN{DateTime.Now.ToString("yyMMdd")}_{DateTime.Now.ToString("hhmmss")}_00_BongleManager_00.txt";
-            await File.WriteAllTextAsync(notifyFileName, $"Device {dev} has been started.");
+            await File.WriteAllTextAsync(notifyFileName, $"SMS service@{dev} has been started.");
+            var pppDir = $"/etc/ppp/peers/";
+            Log("PPP", "INFO", $"Create PPP temp dir {pppDir}");
+            Directory.CreateDirectory(pppDir);
+            var pppFileName = System.IO.Path.Join(pppDir, $"{dev}-ppp");
+            if (!File.Exists(pppFileName))
+            {
+                File.Delete(pppFileName);
+            }
+            Log("PPP", "INFO", $"Write PPP@{dev} config");
+            var pppConf = Config.GetPPPConfig(bongle["Device"]);
+            await File.WriteAllTextAsync(pppFileName, pppConf);
+            var apn = Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_APN");
+            if (string.IsNullOrEmpty(apn))
+            {
+                apn = "cmhk";
+            }
+            var dialNumber = Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_DIALNUMBER");
+            if (string.IsNullOrEmpty(dialNumber))
+            {
+                dialNumber = "*99#";
+            }
+            var pppConnect = Config.GetPPPConnectConfig(apn, dialNumber);
+            var pppConnectFile = System.IO.Path.Join(pppDir, $"{dev}-ppp-chat-connect");
+            if (!File.Exists(pppConnectFile))
+            {
+                File.Delete(pppConnectFile);
+            }
+            Log("PPP", "INFO", $"Write PPP-Connect@{dev} config");
+
+            await File.WriteAllTextAsync(pppConnectFile, pppConnect);
+            var pppDisconnect = Config.GetPPPDisconnectConfig();
+            var pppDisconnectFile = System.IO.Path.Join(pppDir, $"{dev}-ppp-chat-disconnect");
+            if (!File.Exists(pppDisconnectFile))
+            {
+                File.Delete(pppDisconnectFile);
+            }
+            Log("PPP", "INFO", $"Write PPP-Disconnect@{dev} config");
+            await File.WriteAllTextAsync(pppDisconnectFile, pppDisconnect);
+
+
             if ("1" == Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_ENABLED"))
             {
-                var pppDir = $"/tmp/ppp/peers/{dev}";
-                Directory.CreateDirectory(pppDir);
-                var pppFileName = System.IO.Path.Join(pppDir, "ppp");
-                if(!File.Exists(pppFileName))
+               
+                var pppService = Command.StartShell($"systemctl start pppd@{dev}");
+                pppService.Start();
+                BindLogStream($"PPPd@{dev}", pppService.StandardOutput);
+                BindLogStream($"PPPd@{dev} ERROR", pppService.StandardError);
+                await pppService.WaitForExitAsync();
+                Log("Init", "INFO", $"Watch gammu-smsd@{dev}");
+                var pppJournal = Command.StartShell($"journalctl -u pppd@{dev} -f");
+                pppJournal.Start();
+                BindLogStream($"PPPd@{dev}", startService.StandardOutput);
+                BindLogStream($"PPPd@{dev} ERROR", startService.StandardError);
+                await Task.Delay(TimeSpan.FromMinutes(1));
+
+                var v2rayConf = Config.GetV2RayConfig(dev, "ppp0");
+                var v2rayConfDir = "/tmp/v2fly-config";
+                if(Directory.Exists(v2rayConfDir))
                 {
-                    File.Delete(pppFileName);
+                    Directory.Delete(v2rayConfDir, true);
                 }
-                var pppConf = Config.GetPPPConfig(bongle["Device"]);
-                await File.WriteAllTextAsync(pppFileName, pppConf );
-                var apn = Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_APN");
-                if (string.IsNullOrEmpty(apn))
-                {
-                    apn = "cmhk";
-                }
-                var dialNumber = Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_DIALNUMBER");
-                if (string.IsNullOrEmpty(dialNumber))
-                {
-                    dialNumber = "*99#";
-                }
-                var pppConnect = Config.GetPPPConnectConfig(apn, dialNumber);
-                var pppConnectFile = System.IO.Path.Join(pppDir, "ppp-chat-connect");
-                if (!File.Exists(pppConnectFile))
-                {
-                    File.Delete(pppConnectFile);
-                }
-                await File.WriteAllTextAsync(pppConnectFile, pppConnect);
-                var pppDisconnect = Config.GetPPPDisconnectConfig();
-                var pppDisconnectFile = System.IO.Path.Join(pppDir, "ppp-chat-disconnect");
-                if (!File.Exists(pppDisconnectFile))
-                {
-                    File.Delete(pppDisconnectFile);
-                }
-                await File.WriteAllTextAsync(pppDisconnectFile, pppDisconnect);
+                Directory.CreateDirectory(v2rayConfDir);
+                var v2rayConfFileName = System.IO.Path.Join(v2rayConfDir, $"{dev}.json");
+                await File.WriteAllTextAsync(v2rayConfFileName, v2rayConf);
+
+                var v2rayService = Command.StartShell($"systemctl start v2ray@{dev}");
+                pppService.Start();
+                BindLogStream($"V2RAY@{dev}", pppService.StandardOutput);
+                BindLogStream($"V2RAY@{dev} ERROR", pppService.StandardError);
+                await pppService.WaitForExitAsync();
+                Log("Init", "INFO", $"Watch gammu-smsd@{dev}");
+                var v2rayJournal = Command.StartShell($"journalctl -u v2ray@{dev} -f");
+                pppJournal.Start();
+                BindLogStream($"V2RAY@{dev}", startService.StandardOutput);
+                BindLogStream($"V2RAY@{dev} ERROR", startService.StandardError);
             }
         }
 
@@ -355,7 +395,7 @@ public partial class MainView : UserControl
 
     public async Task BindLogFileAsync(string prefix, string fileName)
     {
-        Log("LOGGER", "ERROR", $"Bind {fileName} to LogViewer");
+        Log("LOGGER", "INFO", $"Bind {fileName} to LogViewer");
         FileSystemWatcher watcher = new FileSystemWatcher(System.IO.Path.GetDirectoryName(fileName), System.IO.Path.GetFileName(fileName));
 
         // 设置要监视的事件类型
@@ -478,7 +518,8 @@ public partial class MainView : UserControl
                         Console.WriteLine(s);
                     } else
                     {
-                        await fw.WriteLineAsync(s.ToString());
+                        await fw.WriteAsync(s.ToString());
+                        await fw.WriteAsync(Environment.NewLine);
                     }
                 }
             }

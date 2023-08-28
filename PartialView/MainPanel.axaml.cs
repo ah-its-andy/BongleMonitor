@@ -75,7 +75,7 @@ public partial class MainPanel : UserControl
             process.Start();
             MainView.Instance.BindLogStream(prefix, process.StandardOutput);
             //MainView.Instance.BindLogStream($"{prefix} ERROR", process.StandardError);
-            await process.WaitForExitAsync();
+            await process.WaitAsync();
         }
         catch(Exception e)
         {

@@ -1,10 +1,10 @@
 ﻿[Unit]
-Description=PPPd for 4G bongle
+Description=v2ray
 After=mysql.service postgresql.service network-online.target
 
 [Service]
 # Run daemon as root user
-ExecStart=/bin/sh -c "cd /etc/ppp/peers/ && pppd call %i-ppp"
+ExecStart=/home/andrew/v2ray/v2ray run -config /tmp/v2fly-config/%i.json
 Type=simple
 User=root
 Group=root
