@@ -502,13 +502,7 @@ public partial class MainView : UserControl
     public void StartLogWriter()
     {
         var logFile = Environment.GetEnvironmentVariable("BONGLE_LOG");
-        FileStream filestream = null;
-        StreamWriter fw = null;
-        if(!string.IsNullOrEmpty(logFile) )
-        {
-            filestream = File.Open(logFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
-            fw = new StreamWriter(filestream);
-        }
+      
         Task.Run(async () =>
         {
             while (true)
@@ -516,15 +510,18 @@ public partial class MainView : UserControl
                 if (writeQ.TryDequeue(out LogModel s))
                 {
                     await writeLogAsync(s);
-                    if(fw == null)
+                    if (!string.IsNullOrEmpty(logFile))
                     {
-                        Console.WriteLine(s);
-                    } else
-                    {
-                        await fw.WriteAsync(s.ToString());
-                        await fw.WriteAsync(Environment.NewLine);
+                        try
+                        {
+                            await File.AppendAllTextAsync(logFile, s.ToString());
+                        }
+                        catch
+                        {
+                            //ignore
+                        }
                     }
-                }
+                } 
             }
         });
     }
