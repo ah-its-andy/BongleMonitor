@@ -506,7 +506,7 @@ public partial class MainView : UserControl
         StreamWriter fw = null;
         if(!string.IsNullOrEmpty(logFile) )
         {
-            filestream = File.Open(logFile, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+            filestream = File.Open(logFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             fw = new StreamWriter(filestream);
         }
         Task.Run(async () =>
