@@ -22,10 +22,10 @@ namespace BongleMonitor
         {
             var appPart = $"[{App}]";
             var len = appPart.Length;
-            while (len < 15)
+            while (len < 20)
             {
-                appPart += "\t";
-                len = len + 3;
+                appPart += " ";
+                len = len + 1;
             }
             return $"{appPart} | [{DateTime.Now}] [{Level.ToUpper()}] {Message}";
         }
