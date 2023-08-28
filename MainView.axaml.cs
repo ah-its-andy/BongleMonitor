@@ -514,7 +514,7 @@ public partial class MainView : UserControl
                     {
                         try
                         {
-                            await File.AppendAllTextAsync(logFile, s.ToString() + Environment.NewLine());
+                            await File.AppendAllTextAsync(logFile, s.ToString() + Environment.NewLine);
                         }
                         catch
                         {
