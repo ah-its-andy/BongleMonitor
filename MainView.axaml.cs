@@ -275,9 +275,9 @@ public partial class MainView : UserControl
             }
             Log("PPP", "INFO", $"Write PPP-Disconnect@{dev} config");
             await File.WriteAllTextAsync(pppDisconnectFile, pppDisconnect);
-
-
-            if ("1" == Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_ENABLED"))
+            var pppEnabled = Environment.GetEnvironmentVariable($"{dev.ToUpper()}_PPP_ENABLED");
+            Log("PPP", "INFO", $"{dev.ToUpper()}_PPP_ENABLED = {pppEnabled}");
+            if ("1" == pppEnabled)
             {
                
                 var pppService = Command.StartShell($"systemctl start pppd@{dev}");
@@ -357,7 +357,9 @@ public partial class MainView : UserControl
                 {
                     var line = reader.ReadLine();
                     if (string.IsNullOrEmpty(line)) continue;
-                    Log(prefix, "INFO", line);
+                    //Log(prefix, "INFO", line);
+
+                    await writeLogAsync(new LogModel(prefix, "INFO", line));
                 }
             }
             catch(Exception ex)
@@ -406,7 +408,8 @@ public partial class MainView : UserControl
         foreach (var line in lastLines)
         {
             if (string.IsNullOrEmpty(line)) continue;
-            Log(prefix, "INFO", line);
+            //Log(prefix, "INFO", line);
+            await writeLogAsync(new LogModel(prefix, "INFO", line));
         }
         using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
         {
