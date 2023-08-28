@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:bongle="clr-namespace:BongleMonitor"
+			 xmlns:partialview="clr-namespace:BongleMonitor.PartialView"
 			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="480"
              x:Class="BongleMonitor.MainView">
 	<Grid>
@@ -26,9 +27,13 @@
 			<Border Grid.Row="1" 
 					BorderBrush="#E5E5E5"
 					BorderThickness="0,3,0,0"
-					Background="#EFF4F9">
-				<ScrollViewer x:Name="logViewerContainer" Background="#EFF4F9">
-					<ListBox x:Name="logViewer" Background="#EFF4F9"></ListBox>
+					Background="#0C0C0C">
+				<ScrollViewer x:Name="logViewerContainer" 
+							  Background="#0C0C0C">
+					<ListBox x:Name="logViewer" 
+							 IsVisible="True"
+							 Background="Transparent"></ListBox>
+					
 				</ScrollViewer>
 			</Border>
 			<Border x:Name="bottomBarRoot" Grid.Row="2" 

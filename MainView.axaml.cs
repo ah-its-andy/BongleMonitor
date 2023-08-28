@@ -459,7 +459,8 @@ public partial class MainView : UserControl
             {
                 if (logs.TryDequeue(out LogModel s))
                 {
-                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    //await panelOutput.AddLineAsync(s);
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
                     {
                         if (logViewer.Items.Count >= 100)
                         {
@@ -473,10 +474,12 @@ public partial class MainView : UserControl
                             TextWrapping = TextWrapping.Wrap,
                             Padding = new Thickness(0)
                         };
+                        var textLine = new TextLineView();
+                        await textLine.SetLogModelAsync(s);
                         var item = new ListBoxItem
                         {
-                            Content = textBlock,
-                            Padding = new Thickness(0),
+                            Content = textLine,
+                            Padding = new Thickness(10,0),
                             Margin = new Thickness(0)
                         };
                         if (s.Level.Contains("ERROR", StringComparison.InvariantCultureIgnoreCase))

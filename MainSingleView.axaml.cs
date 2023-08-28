@@ -99,8 +99,8 @@ public partial class MainSingleView : UserControl
 
             try
             {
+                //await MainView.Instance.InitGammuSmsD();
                 await MainView.Instance.InitBottomBar();
-                await MainView.Instance.InitGammuSmsD();
                 await MainView.Instance.InitMainPanel();
                 await MainView.Instance.InitLogView();
                 _maskTimer.Start();

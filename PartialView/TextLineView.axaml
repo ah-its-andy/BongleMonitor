@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             Background="Transparent"
+			 x:Class="BongleMonitor.PartialView.TextLineView">
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="100"></ColumnDefinition>
+			<ColumnDefinition Width="40"></ColumnDefinition>
+			<ColumnDefinition></ColumnDefinition>
+		</Grid.ColumnDefinitions>
+		<Border BorderBrush="#CCCCCC" BorderThickness="0,0,1,0" Margin="0,0,10,0">
+			<TextBlock x:Name="txtAppName"
+					   Foreground="#CCCCCC"
+					   Grid.Column="0"
+					   Text="Init"></TextBlock>
+		</Border>
+		<TextBlock x:Name="txtLevel" 
+				   Foreground="#CCCCCC"
+				   Grid.Column="1"
+				   Text="INFO"></TextBlock>
+		<TextBlock x:Name="txtContent"
+				   Foreground="#CCCCCC"
+				   TextWrapping="Wrap"
+				   Grid.Column="2"
+				   Text="1234567890"></TextBlock>
+	</Grid>
+</UserControl>
